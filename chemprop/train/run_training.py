@@ -111,6 +111,9 @@ def run_training(args: TrainArgs,
         args.train_class_sizes = train_class_sizes
         args.pos_weights = torch.tensor([(size[0]+1) / (
             size[1]+1+0.00000001) for size in train_class_sizes], device=args.device)
+    
+    if args.dataset_type == 'regression':
+        args.pos_weights = None
 
     if args.save_smiles_splits:
         save_smiles_splits(
