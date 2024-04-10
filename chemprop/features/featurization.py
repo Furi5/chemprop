@@ -333,6 +333,7 @@ class MolGraph:
         :param overwrite_default_atom_features: Boolean to overwrite default atom features by atom_features instead of concatenating.
         :param overwrite_default_bond_features: Boolean to overwrite default bond features by bond_features instead of concatenating.
         """
+        self.mol = mol
         self.is_mol = is_mol(mol)
         self.is_reaction = is_reaction(self.is_mol)
         self.is_explicit_h = is_explicit_h(self.is_mol)
@@ -531,6 +532,7 @@ class BatchMolGraph:
         r"""
         :param mol_graphs: A list of :class:`MolGraph`\ s from which to construct the :class:`BatchMolGraph`.
         """
+        self.mol_batch = [mol_graph.mol for mol_graph in mol_graphs]
         self.mol_graphs = mol_graphs
         self.overwrite_default_atom_features = mol_graphs[0].overwrite_default_atom_features
         self.overwrite_default_bond_features = mol_graphs[0].overwrite_default_bond_features

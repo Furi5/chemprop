@@ -10,7 +10,7 @@ from .ffn import build_ffn, MultiReadout
 from chemprop.args import TrainArgs
 from chemprop.features import BatchMolGraph
 from chemprop.nn_utils import initialize_weights
-
+    
 
 class MoleculeModel(nn.Module):
     """A :class:`MoleculeModel` is a model which contains a message passing network following by feed-forward layers."""
@@ -20,10 +20,10 @@ class MoleculeModel(nn.Module):
         :param args: A :class:`~chemprop.args.TrainArgs` object containing model arguments.
         """
         super(MoleculeModel, self).__init__()
-
         self.classification = args.dataset_type == "classification"
         self.multiclass = args.dataset_type == "multiclass"
         self.loss_function = args.loss_function
+       
 
         if hasattr(args, "train_class_sizes"):
             self.train_class_sizes = args.train_class_sizes

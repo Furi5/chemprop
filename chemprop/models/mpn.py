@@ -5,10 +5,15 @@ import numpy as np
 from rdkit import Chem
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
+
+from dgl.readout import sum_nodes
+from dgl.nn import WeightAndSum
 
 from chemprop.args import TrainArgs
 from chemprop.features import BatchMolGraph, get_atom_fdim, get_bond_fdim, mol2graph
 from chemprop.nn_utils import index_select_ND, get_activation_function
+from chemprop.nn_utils import visualize_atom_attention
 
 
 class MPNEncoder(nn.Module):
@@ -37,6 +42,8 @@ class MPNEncoder(nn.Module):
         self.aggregation = args.aggregation
         self.aggregation_norm = args.aggregation_norm
         self.is_atom_bond_targets = args.is_atom_bond_targets
+        # Attention
+        self.attention = True
 
         # Dropout
         self.dropout = nn.Dropout(args.dropout)
@@ -60,6 +67,11 @@ class MPNEncoder(nn.Module):
 
         self.W_o = nn.Linear(self.atom_fdim + self.hidden_size, self.hidden_size)
 
+
+        if self.attention:
+                    self.W_a = nn.Linear(self.hidden_size, self.hidden_size, bias=self.bias)
+                    self.W_b = nn.Linear(self.hidden_size, self.hidden_size)
+
         if self.is_atom_bond_targets:
             self.W_o_b = nn.Linear(self.bond_fdim + self.hidden_size, self.hidden_size)
 
@@ -72,7 +84,7 @@ class MPNEncoder(nn.Module):
             self.bond_descriptors_size = args.bond_descriptors_size
             self.bond_descriptors_layer = nn.Linear(self.hidden_size + self.bond_descriptors_size,
                                                     self.hidden_size + self.bond_descriptors_size,)
-
+        
     def forward(self,
                 mol_graph: BatchMolGraph,
                 atom_descriptors_batch: List[np.ndarray] = None,
@@ -105,9 +117,6 @@ class MPNEncoder(nn.Module):
                 for i, fi in enumerate(backward_index):
                     bond_descriptors_batch[fi] = descriptors_batch[i]
                 bond_descriptors_batch = torch.from_numpy(bond_descriptors_batch).float().to(self.device)
-
-        if self.atom_messages:
-            a2a = mol_graph.get_a2a().to(self.device)
 
         # Input
         if self.atom_messages:
@@ -180,7 +189,19 @@ class MPNEncoder(nn.Module):
                 mol_vecs.append(self.cached_zero_vector)
             else:
                 cur_hiddens = atom_hiddens.narrow(0, a_start, a_size)
-                mol_vec = cur_hiddens  # (num_atoms, hidden_size)
+                if self.attention:
+                        att_w = torch.matmul(self.W_a(cur_hiddens), cur_hiddens.t())
+                        att_w = F.softmax(att_w, dim=1)
+                        att_hiddens = torch.matmul(att_w, cur_hiddens)
+                        att_hiddens = self.act_func(self.W_b(att_hiddens))
+                        att_hiddens = self.dropout(att_hiddens)
+                        mol_vec = (cur_hiddens + att_hiddens)
+                        viz_dir = 'viz_dir/'
+                        # viz_dir = None
+                        if viz_dir is not None:
+                            visualize_atom_attention(viz_dir, mol_graph.mol_batch[i], a_size, att_w)
+                else:
+                    mol_vec = cur_hiddens  # (num_atoms, hidden_size)
                 if self.aggregation == 'mean':
                     mol_vec = mol_vec.sum(dim=0) / a_size
                 elif self.aggregation == 'sum':
@@ -244,6 +265,7 @@ class MPN(nn.Module):
             self.encoder_solvent = MPNEncoder(args, self.atom_fdim_solvent, self.bond_fdim_solvent,
                                               args.hidden_size_solvent, args.bias_solvent, args.depth_solvent)
 
+    
     def forward(self,
                 batch: Union[List[List[str]], List[List[Chem.Mol]], List[List[Tuple[Chem.Mol, Chem.Mol]]], List[BatchMolGraph]],
                 features_batch: List[np.ndarray] = None,
@@ -265,6 +287,7 @@ class MPN(nn.Module):
         :param bond_features_batch: A list of numpy arrays containing additional bond features.
         :return: A PyTorch tensor of shape :code:`(num_molecules, hidden_size)` containing the encoding of each molecule.
         """
+
         if type(batch[0]) != BatchMolGraph:
             # Group first molecules, second molecules, etc for mol2graph
             batch = [[mols[i] for mols in batch] for i in range(len(batch[0]))]
@@ -334,3 +357,18 @@ class MPN(nn.Module):
             output = torch.cat([output, features_batch], dim=1)
 
         return output
+
+    def viz_attention(self, batch: Union[List[str], BatchMolGraph],
+                      features_batch: List[np.ndarray] = None,
+                      viz_dir: str = None):
+        """
+        Visualizes attention weights for a batch of molecular SMILES strings
+        :param viz_dir: Directory in which to save visualized attention weights.
+        :param batch: A list of SMILES strings or a BatchMolGraph (if self.graph_input).
+        :param features_batch: A list of ndarrays containing additional features.
+        """
+        if not self.graph_input:
+            batch = mol2graph(batch, self.args)
+
+        self.encoder.forward(batch, features_batch, viz_dir=viz_dir)
+        print(f'usei++++++++++++++++++++++++++++++++++++++++viz_attention')

@@ -9,3 +9,8 @@
 chemprop.egg-info
 docs/build
 dist/*
+viz_dir
+test_checkpoints_reg
+test_checkpoints_cla
+log
+checkpoints

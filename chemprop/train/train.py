@@ -218,6 +218,7 @@ def train(
             if args.loss_function == "mcc":
                 loss = loss.mean()
             else:
+                # 加权平均损失，该权重有 mask 决定, .sum是用来计算张量中所有元素的总和
                 loss = loss.sum() / masks.sum()
 
             loss_sum += loss.item()
