@@ -16,6 +16,29 @@ from chemprop.nn_utils import index_select_ND, get_activation_function
 from chemprop.nn_utils import visualize_atom_attention
 
 
+class attention_weight(nn.Module):
+    def __init__(self, args):
+        super(attention_weight, self).__init__()
+        self.hidden_size = args.hidden_size
+        self.bias = args.bias
+        self.W_a = nn.Linear(self.hidden_size, self.hidden_size, bias=self.bias)
+        self.W_b = nn.Linear(self.hidden_size, self.hidden_size)
+        # Dropout
+        self.dropout = nn.Dropout(args.dropout)
+
+        # Activation
+        self.act_func = get_activation_function(args.activation)
+
+    def forward(self, hiddens):
+        att_w = torch.matmul(self.W_a(hiddens), hiddens.t())
+        att_w = F.softmax(att_w, dim=1)
+        att_hiddens = torch.matmul(att_w, hiddens)
+        att_hiddens = self.act_func(self.W_b(att_hiddens))
+        att_hiddens = self.dropout(att_hiddens)
+        mol_vec = (hiddens + att_hiddens)
+        return mol_vec, att_w
+        
+
 class MPNEncoder(nn.Module):
     """An :class:`MPNEncoder` is a message passing neural network for encoding a molecule."""
 
@@ -58,6 +81,8 @@ class MPNEncoder(nn.Module):
         input_dim = self.atom_fdim if self.atom_messages else self.bond_fdim
         self.W_i = nn.Linear(input_dim, self.hidden_size, bias=self.bias)
 
+        self.num_tasks = args.num_tasks
+        
         if self.atom_messages:
             w_h_input_size = self.hidden_size + self.bond_fdim
         else:
@@ -69,8 +94,9 @@ class MPNEncoder(nn.Module):
 
 
         if self.attention:
-                    self.W_a = nn.Linear(self.hidden_size, self.hidden_size, bias=self.bias)
-                    self.W_b = nn.Linear(self.hidden_size, self.hidden_size)
+            self.attention_list = nn.ModuleList()
+            for i in range(self.num_tasks):
+                self.attention_list.append(attention_weight(args))
 
         if self.is_atom_bond_targets:
             self.W_o_b = nn.Linear(self.bond_fdim + self.hidden_size, self.hidden_size)
@@ -183,36 +209,37 @@ class MPNEncoder(nn.Module):
         if self.is_atom_bond_targets:
             return atom_hiddens, a_scope, bond_hiddens, b_scope, b2br  # num_atoms x hidden, remove the first one which is zero padding
 
-        mol_vecs = []
-        for i, (a_start, a_size) in enumerate(a_scope):
-            if a_size == 0:
-                mol_vecs.append(self.cached_zero_vector)
-            else:
-                cur_hiddens = atom_hiddens.narrow(0, a_start, a_size)
-                if self.attention:
-                        att_w = torch.matmul(self.W_a(cur_hiddens), cur_hiddens.t())
-                        att_w = F.softmax(att_w, dim=1)
-                        att_hiddens = torch.matmul(att_w, cur_hiddens)
-                        att_hiddens = self.act_func(self.W_b(att_hiddens))
-                        att_hiddens = self.dropout(att_hiddens)
-                        mol_vec = (cur_hiddens + att_hiddens)
-                        viz_dir = 'viz_dir/'
-                        # viz_dir = None
-                        if viz_dir is not None:
-                            visualize_atom_attention(viz_dir, mol_graph.mol_batch[i], a_size, att_w)
+        att_tasks = []
+        mol_vecs_tasks = []
+        for j in range(self.num_tasks):
+            mol_vecs = []
+            att_mols = []
+            for i, (a_start, a_size) in enumerate(a_scope):
+                if a_size == 0:
+                    mol_vecs.append(self.cached_zero_vector)
                 else:
-                    mol_vec = cur_hiddens  # (num_atoms, hidden_size)
-                if self.aggregation == 'mean':
-                    mol_vec = mol_vec.sum(dim=0) / a_size
-                elif self.aggregation == 'sum':
-                    mol_vec = mol_vec.sum(dim=0)
-                elif self.aggregation == 'norm':
-                    mol_vec = mol_vec.sum(dim=0) / self.aggregation_norm
-                mol_vecs.append(mol_vec)
+                    cur_hiddens = atom_hiddens.narrow(0, a_start, a_size)
+                    if self.attention:
+                        mol_vec, att_task = self.attention_list[j](cur_hiddens)
+                        att_mols.append(att_task)
+                    else:
+                        mol_vec = cur_hiddens  # (num_atoms, hidden_size)
+                    if self.aggregation == 'mean':
+                        mol_vec = mol_vec.sum(dim=0) / a_size
+                    elif self.aggregation == 'sum':
+                        mol_vec = mol_vec.sum(dim=0)
+                    elif self.aggregation == 'norm':
+                        mol_vec = mol_vec.sum(dim=0) / self.aggregation_norm
+                    mol_vecs.append(mol_vec)
+            
+            att_tasks.append(att_mols)
+            
+            mol_vecs = torch.stack(mol_vecs, dim=0)  # (num_molecules, hidden_size)
+            mol_vecs_tasks.append(mol_vecs)
+            
+        mol_vecs_tasks = torch.stack(mol_vecs_tasks, dim=0)  # (num_tasks, num_molecules, hidden_size)
 
-        mol_vecs = torch.stack(mol_vecs, dim=0)  # (num_molecules, hidden_size)
-
-        return mol_vecs  # num_molecules x hidden
+        return mol_vecs_tasks, att_tasks  # num_molecules x hidden
 
 
 class MPN(nn.Module):

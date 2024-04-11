@@ -72,6 +72,7 @@ class MoleculeModel(nn.Module):
 
         self.create_encoder(args)
         self.create_ffn(args)
+        self.num_tasks = args.num_tasks
 
         initialize_weights(self)
 
@@ -137,16 +138,31 @@ class MoleculeModel(nn.Module):
                 weights_ffn_num_layers=args.weights_ffn_num_layers,
             )
         else:
-            self.readout = build_ffn(
-                first_linear_dim=atom_first_linear_dim,
-                hidden_size=args.ffn_hidden_size + args.atom_descriptors_size,
-                num_layers=args.ffn_num_layers,
-                output_size=self.relative_output_size * args.num_tasks,
-                dropout=args.dropout,
-                activation=args.activation,
-                dataset_type=args.dataset_type,
-                spectra_activation=args.spectra_activation,
-            )
+            self.readout_list = nn.ModuleList()
+
+            for i in range(args.num_tasks):
+                self.readout_list.append(
+                                build_ffn(
+                                    first_linear_dim=atom_first_linear_dim,
+                                    hidden_size=args.ffn_hidden_size + args.atom_descriptors_size,
+                                    num_layers=args.ffn_num_layers,
+                                    output_size=1,
+                                    dropout=args.dropout,
+                                    activation=args.activation,
+                                    dataset_type=args.dataset_type,
+                                    spectra_activation=args.spectra_activation,)       
+                                              )
+
+            # self.readout = build_ffn(
+            #     first_linear_dim=atom_first_linear_dim,
+            #     hidden_size=args.ffn_hidden_size + args.atom_descriptors_size,
+            #     num_layers=args.ffn_num_layers,
+            #     output_size=1,
+            #     dropout=args.dropout,
+            #     activation=args.activation,
+            #     dataset_type=args.dataset_type,
+            #     spectra_activation=args.spectra_activation,
+            # )
 
         if args.checkpoint_frzn is not None:
             if args.frzn_ffn_layers > 0:
@@ -275,15 +291,23 @@ class MoleculeModel(nn.Module):
             )
             output = self.readout(encodings, constraints_batch, bond_types_batch)
         else:
-            encodings = self.encoder(
+            encodings, att = self.encoder(
                 batch,
                 features_batch,
                 atom_descriptors_batch,
                 atom_features_batch,
                 bond_descriptors_batch,
                 bond_features_batch,
-            )
-            output = self.readout(encodings)
+            ) # size([50,300])
+            
+            outputs = []
+            for i in range(self.num_tasks):
+                output = self.readout_list[i](encodings[i])
+                output = torch.squeeze(output, dim=1)
+                outputs.append(output)
+            output = torch.stack(outputs, dim=1)
+            # output = self.readout(encodings) # ffn
+
 
         # Don't apply sigmoid during training when using BCEWithLogitsLoss
         if (
