@@ -11,3 +11,6 @@ docs/build
 dist/*
 log
 checkpoints
+test_checkpoints_cla
+test_checkpoints_reg
+viz_dir

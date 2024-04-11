@@ -40,7 +40,6 @@ train_arguments = [
     '--gpu', str(gpu),
     '--save_smiles_splits',
     '--save_preds',
-    'show_individual_scores',
 ]
 
 args = TrainArgs().parse_args(train_arguments)
