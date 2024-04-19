@@ -1,5 +1,5 @@
 """Trains a chemprop model on a dataset."""
-import argparse
+
 from chemprop.train import cross_validate, run_training
 from chemprop.args import TrainArgs, HyperoptArgs
 from chemprop.hyperparameter_optimization import hyperopt
@@ -40,7 +40,7 @@ train_arguments = [
     '--separate_test_path', f'/home/fuli/my_code/git/tox_data/tox_data_v1/{task}/{input_args.file}/{task}_test.csv',
     '--config_path', f'checkpoints/{task}/{task}_hyperopt/config.json',
     '--dataset_type', 'classification',
-    '--save_dir', f'checkpoints/{task}/{task}_{input_args.file}_model',
+    '--save_dir', f'checkpoints/att/{task}/{task}_{input_args.file}_model',
     '--epochs', '1000',
     '--gpu', str(input_args.gpu),
     '--save_smiles_splits',
