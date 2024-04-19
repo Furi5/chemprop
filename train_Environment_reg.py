@@ -1,5 +1,5 @@
 """Trains a chemprop model on a dataset."""
-
+import argparse
 from chemprop.train import cross_validate, run_training
 from chemprop.args import TrainArgs, HyperoptArgs
 from chemprop.hyperparameter_optimization import hyperopt
@@ -28,15 +28,20 @@ gpu = 1
 # hyperopt(args=hy_args)
 
 # ---------------train-------------#
+parser = argparse.ArgumentParser()
+parser.add_argument('--file', help='file iter')
+parser.add_argument('--gpu', help='gpu id')
+input_args = parser.parse_args()
+
 train_arguments = [
-    '--data_path', f'/home/fuli/my_code/git/tox_data/tox_data_v1/{task}/reg/{task}_train.csv',
-    '--separate_val_path', f'/home/fuli/my_code/git/tox_data/tox_data_v1/{task}/reg/{task}_valid.csv',
-    '--separate_test_path', f'/home/fuli/my_code/git/tox_data/tox_data_v1/{task}/reg/{task}_test.csv',
+    '--data_path', f'/home/fuli/my_code/git/tox_data/tox_data_v1/{task}/reg/{input_args.file}/{task}_train.csv',
+    '--separate_val_path', f'/home/fuli/my_code/git/tox_data/tox_data_v1/{task}/reg/{input_args.file}/{task}_valid.csv',
+    '--separate_test_path', f'/home/fuli/my_code/git/tox_data/tox_data_v1/{task}/reg/{input_args.file}/{task}_test.csv',
     '--config_path', f'checkpoints/{task}/reg/{task}_hyperopt/config.json',
     '--dataset_type', 'regression',
-    '--save_dir', f'checkpoints/{task}/reg/{task}_model',
+    '--save_dir', f'checkpoints/{task}/reg/{task}_{input_args.file}_model',
     '--epochs', '1000',
-    '--gpu', str(gpu),
+    '--gpu', str(input_args.gpu),
     '--save_smiles_splits',
     '--save_preds',
 ]
