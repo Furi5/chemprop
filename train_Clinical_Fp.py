@@ -4,7 +4,7 @@ from chemprop.train import cross_validate, run_training
 from chemprop.args import TrainArgs, HyperoptArgs
 from chemprop.hyperparameter_optimization import hyperopt
 
-task = 'Target'
+task = 'Clinical'
 gpu = 0
 
 
@@ -28,7 +28,7 @@ gpu = 0
 # hy_args = HyperoptArgs().parse_args(hyperparameter_arguments)
 # hyperopt(args=hy_args)
 
-# ----------------train------------------#
+# ---------------train-------------#
 parser = argparse.ArgumentParser()
 parser.add_argument('--file', help='file iter')
 parser.add_argument('--gpu', help='gpu id')
@@ -41,7 +41,7 @@ train_arguments = [
     '--config_path', f'checkpoints/{task}/{task}_hyperopt/config.json',
     '--dataset_type', 'classification',
     '--save_dir', f'checkpoints/{task}/{task}_{input_args.file}_model',
-    '--epochs', '100',
+    '--epochs', '1000',
     '--gpu', str(input_args.gpu),
     '--save_smiles_splits',
     '--save_preds',

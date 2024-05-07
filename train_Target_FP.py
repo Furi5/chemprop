@@ -28,7 +28,7 @@ gpu = 0
 # hy_args = HyperoptArgs().parse_args(hyperparameter_arguments)
 # hyperopt(args=hy_args)
 
-# ----------------train------------------#
+#----------------train------------------#
 parser = argparse.ArgumentParser()
 parser.add_argument('--file', help='file iter')
 parser.add_argument('--gpu', help='gpu id')
