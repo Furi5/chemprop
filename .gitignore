@@ -15,3 +15,5 @@ test_checkpoints_cla
 test_checkpoints_reg
 viz_dir
 nohup.out
+Evaluation_cla.py
+Evaluation_reg.py
