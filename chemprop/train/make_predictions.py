@@ -173,7 +173,7 @@ def predict_and_save(
         spectra_phase_mask=getattr(train_args, "spectra_phase_mask", None),
     )
 
-    preds, unc = estimator.calculate_uncertainty(
+    preds, unc, att = estimator.calculate_uncertainty(
         calibrator=calibrator
     )  # preds and unc are lists of shape(data,tasks)
 
@@ -181,7 +181,8 @@ def predict_and_save(
         task_names = task_names[:len(task_names) // 2]
 
     if calibrator is not None and args.is_atom_bond_targets and args.calibration_method == "isotonic":
-        unc = reshape_values(unc, test_data, len(args.atom_targets), len(args.bond_targets))
+        unc = reshape_values(unc, test_data, len(
+            args.atom_targets), len(args.bond_targets))
 
     if args.individual_ensemble_predictions:
         individual_preds = (
@@ -239,7 +240,8 @@ def predict_and_save(
     if args.uncertainty_method == "spectra_roundrobin":
         num_unc_tasks = 1
     elif args.uncertainty_method == "dirichlet" and args.dataset_type == "multiclass":
-        num_unc_tasks = num_tasks // args.multiclass_num_classes # dirichlet only returns an uncertainty for each task rather than each class
+        # dirichlet only returns an uncertainty for each task rather than each class
+        num_unc_tasks = num_tasks // args.multiclass_num_classes
     elif args.calibration_method == "conformal_regression":
         num_unc_tasks = 2 * num_tasks
     elif args.calibration_method == "conformal" and args.dataset_type == "classification":
@@ -276,7 +278,8 @@ def predict_and_save(
                 d_preds = ["Invalid SMILES"] * num_tasks
                 d_unc = ["Invalid SMILES"] * num_unc_tasks
                 if args.individual_ensemble_predictions:
-                    ind_preds = [["Invalid SMILES"] * len(args.checkpoint_paths)] * num_tasks
+                    ind_preds = [["Invalid SMILES"] *
+                                 len(args.checkpoint_paths)] * num_tasks
             # Reshape multiclass to merge task and class dimension, with updated num_tasks
             if args.dataset_type == "multiclass":
                 d_preds = np.array(d_preds).reshape((num_tasks))
@@ -299,7 +302,8 @@ def predict_and_save(
             if args.uncertainty_method == "spectra_roundrobin":
                 unc_names = [estimator.label]
             elif args.uncertainty_method == "conformal_quantile_regression" and args.calibration_method is None:
-                unc_names = [f"{name}_{args.conformal_alpha}_half_interval" for name in task_names]
+                unc_names = [
+                    f"{name}_{args.conformal_alpha}_half_interval" for name in task_names]
             elif args.calibration_method == "conformal_regression" and args.calibration_path is None:
                 unc_names = []
             elif args.calibration_method == "conformal" and args.dataset_type == "classification":
@@ -307,11 +311,11 @@ def predict_and_save(
                     f"{name}_{estimator.label}_out_set" for name in task_names
                 ]
             else:
-                unc_names = [name + f"_{estimator.label}" for name in task_names]
-            
+                unc_names = [
+                    name + f"_{estimator.label}" for name in task_names]
+
             for pred_name, pred in zip(task_names, d_preds):
                 datapoint.row[pred_name] = pred
-            
 
             for unc_name, un in zip(unc_names, d_unc):
                 if (
@@ -332,7 +336,8 @@ def predict_and_save(
                 writer.writerow(datapoint.row)
 
         if evaluations is not None and args.evaluation_scores_path is not None:
-            print(f"Saving uncertainty evaluations to {args.evaluation_scores_path}")
+            print(
+                f"Saving uncertainty evaluations to {args.evaluation_scores_path}")
             if args.dataset_type == "multiclass":
                 task_names = original_task_names
             with open(args.evaluation_scores_path, "w", newline="") as f:
@@ -354,9 +359,9 @@ def predict_and_save(
                 un = ["Invalid SMILES"] * num_unc_tasks
             full_preds.append(pred)
             full_unc.append(un)
-        return full_preds, full_unc
+        return full_preds, full_unc, att
     else:
-        return preds, unc
+        return preds, unc, att
 
 
 @timeit()
@@ -375,6 +380,7 @@ def make_predictions(
     return_invalid_smiles: bool = True,
     return_index_dict: bool = False,
     return_uncertainty: bool = False,
+    return_attention_weights: bool = False,
 ) -> List[List[Optional[float]]]:
     """
     Loads data and a trained model and uses the model to make predictions on the data.
@@ -408,13 +414,15 @@ def make_predictions(
     set_features(args, train_args)
 
     # Note: to get the invalid SMILES for your data, use the get_invalid_smiles_from_file or get_invalid_smiles_from_list functions from data/utils.py
-    full_data, test_data, test_data_loader, full_to_valid_indices = load_data(args, smiles)
+    full_data, test_data, test_data_loader, full_to_valid_indices = load_data(
+        args, smiles)
 
     if args.uncertainty_method is not None and args.calibration_method in [
         "conformal_regression",
         "conformal_quantile_regression",
     ]:
-        raise ValueError("Conformal regression is not compatible with an uncertainty method")
+        raise ValueError(
+            "Conformal regression is not compatible with an uncertainty method")
 
     if args.uncertainty_method is None and (
         args.calibration_method is not None or args.evaluation_methods is not None
@@ -425,13 +433,13 @@ def make_predictions(
             if args.loss_function == "quantile_interval":
                 raise ValueError(
                     "For a model trained on the `quantile_interval` loss function, the calibration method should be assigned as `conformal_quantile_regression` instead of `conformal_regression`."
-                    )
+                )
             args.uncertainty_method = "conformal_regression"
         elif args.calibration_method == "conformal_quantile_regression":
             if args.loss_function != "quantile_interval":
                 raise ValueError(
                     "The calibration method `conformal_quantile_regression` only supports regression models trained on the `quantile_interval` loss function."
-                    )
+                )
             args.uncertainty_method = "conformal_quantile_regression"
         else:
             raise ValueError(
@@ -494,7 +502,7 @@ def make_predictions(
         preds = [None] * len(full_data)
         unc = [None] * len(full_data)
     else:
-        preds, unc = predict_and_save(
+        preds, unc, att = predict_and_save(
             args=args,
             train_args=train_args,
             test_data=test_data,
@@ -528,9 +536,9 @@ def make_predictions(
             return preds_dict
     else:
         if return_uncertainty:
-            return preds, unc
+            return preds, unc, att
         else:
-            return preds
+            return preds, att
 
 
 def chemprop_predict() -> None:

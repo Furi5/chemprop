@@ -42,6 +42,7 @@ train_arguments = [
     '--dataset_type', 'classification',
     '--save_dir', f'checkpoints/att/{task}/{task}_{input_args.file}_model',
     '--epochs', '100',
+    '--loss_function', '--dirichlet',
     '--gpu', str(input_args.gpu),
     '--save_smiles_splits',
     '--save_preds',

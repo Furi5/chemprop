@@ -147,7 +147,7 @@ class NoUncertaintyPredictor(UncertaintyPredictor):
                         bond_descriptor_scaler, scale_bond_descriptors=True
                     )
 
-            preds = predict(
+            preds, atts = predict(
                 model=model,
                 data_loader=self.test_data_loader,
                 scaler=scaler,
@@ -176,16 +176,19 @@ class NoUncertaintyPredictor(UncertaintyPredictor):
                         individual_preds = []
                         for _ in model.atom_targets:
                             individual_preds.append(
-                                np.zeros((np.array(n_atoms).sum(), 1, self.num_models))
+                                np.zeros(
+                                    (np.array(n_atoms).sum(), 1, self.num_models))
                             )
                         for _ in model.bond_targets:
                             individual_preds.append(
-                                np.zeros((np.array(n_bonds).sum(), 1, self.num_models))
+                                np.zeros(
+                                    (np.array(n_bonds).sum(), 1, self.num_models))
                             )
                         for j, pred in enumerate(preds):
                             individual_preds[j][:, :, i] = pred
                     else:
-                        individual_preds = np.expand_dims(np.array(preds), axis=-1)
+                        individual_preds = np.expand_dims(
+                            np.array(preds), axis=-1)
             else:
                 if model.is_atom_bond_targets:
                     sum_preds += np.array(preds, dtype=object)
@@ -262,7 +265,8 @@ class ConformalQuantileRegressionPredictor(UncertaintyPredictor):
         Reformat predictions to the midpoint between the upper and lower quantiles.
         """
         num_data, num_tasks = preds.shape
-        reshaped_preds = preds.reshape(num_data, 2, num_tasks // 2).mean(axis=1)
+        reshaped_preds = preds.reshape(
+            num_data, 2, num_tasks // 2).mean(axis=1)
         return reshaped_preds
 
     @staticmethod
@@ -271,7 +275,8 @@ class ConformalQuantileRegressionPredictor(UncertaintyPredictor):
         Make uncalibrated intervals from the uncalibrated predictions.
         """
         num_data, num_tasks = preds.shape
-        intervals = abs(np.diff(preds.reshape(num_data, 2, num_tasks // 2), axis=1) / 2)
+        intervals = abs(np.diff(preds.reshape(
+            num_data, 2, num_tasks // 2), axis=1) / 2)
         intervals = intervals.reshape(num_data, num_tasks // 2)
         return intervals
 
@@ -321,16 +326,19 @@ class ConformalQuantileRegressionPredictor(UncertaintyPredictor):
                         individual_preds = []
                         for _ in model.atom_targets:
                             individual_preds.append(
-                                np.zeros((np.array(n_atoms).sum(), 1, self.num_models))
+                                np.zeros(
+                                    (np.array(n_atoms).sum(), 1, self.num_models))
                             )
                         for _ in model.bond_targets:
                             individual_preds.append(
-                                np.zeros((np.array(n_bonds).sum(), 1, self.num_models))
+                                np.zeros(
+                                    (np.array(n_bonds).sum(), 1, self.num_models))
                             )
                         for j, pred in enumerate(preds):
                             individual_preds[j][:, :, i] = pred
                     else:
-                        individual_preds = np.expand_dims(np.array(preds), axis=-1)
+                        individual_preds = np.expand_dims(
+                            np.array(preds), axis=-1)
             else:
                 sum_preds += np.array(preds)
                 if self.individual_ensemble_predictions:
@@ -522,16 +530,19 @@ class MVEPredictor(UncertaintyPredictor):
                         individual_preds = []
                         for _ in model.atom_targets:
                             individual_preds.append(
-                                np.zeros((np.array(n_atoms).sum(), 1, self.num_models))
+                                np.zeros(
+                                    (np.array(n_atoms).sum(), 1, self.num_models))
                             )
                         for _ in model.bond_targets:
                             individual_preds.append(
-                                np.zeros((np.array(n_bonds).sum(), 1, self.num_models))
+                                np.zeros(
+                                    (np.array(n_bonds).sum(), 1, self.num_models))
                             )
                         for j, pred in enumerate(preds):
                             individual_preds[j][:, :, i] = pred
                     else:
-                        individual_preds = np.expand_dims(np.array(preds), axis=-1)
+                        individual_preds = np.expand_dims(
+                            np.array(preds), axis=-1)
             else:
                 sum_preds += np.array(preds)
                 sum_squared += np.square(preds)
@@ -650,7 +661,8 @@ class EvidentialTotalPredictor(UncertaintyPredictor):
                 atom_bond_scaler=atom_bond_scaler,
                 return_unc_parameters=True,
             )
-            var = np.array(betas) * (1 + 1 / np.array(lambdas)) / (np.array(alphas) - 1)
+            var = np.array(betas) * (1 + 1 / np.array(lambdas)
+                                     ) / (np.array(alphas) - 1)
             if i == 0:
                 sum_preds = np.array(preds)
                 sum_squared = np.square(preds)
@@ -665,16 +677,19 @@ class EvidentialTotalPredictor(UncertaintyPredictor):
                         individual_preds = []
                         for _ in model.atom_targets:
                             individual_preds.append(
-                                np.zeros((np.array(n_atoms).sum(), 1, self.num_models))
+                                np.zeros(
+                                    (np.array(n_atoms).sum(), 1, self.num_models))
                             )
                         for _ in model.bond_targets:
                             individual_preds.append(
-                                np.zeros((np.array(n_bonds).sum(), 1, self.num_models))
+                                np.zeros(
+                                    (np.array(n_bonds).sum(), 1, self.num_models))
                             )
                         for j, pred in enumerate(preds):
                             individual_preds[j][:, :, i] = pred
                     else:
-                        individual_preds = np.expand_dims(np.array(preds), axis=-1)
+                        individual_preds = np.expand_dims(
+                            np.array(preds), axis=-1)
             else:
                 sum_preds += np.array(preds)
                 sum_squared += np.square(preds)
@@ -808,16 +823,19 @@ class EvidentialAleatoricPredictor(UncertaintyPredictor):
                         individual_preds = []
                         for _ in model.atom_targets:
                             individual_preds.append(
-                                np.zeros((np.array(n_atoms).sum(), 1, self.num_models))
+                                np.zeros(
+                                    (np.array(n_atoms).sum(), 1, self.num_models))
                             )
                         for _ in model.bond_targets:
                             individual_preds.append(
-                                np.zeros((np.array(n_bonds).sum(), 1, self.num_models))
+                                np.zeros(
+                                    (np.array(n_bonds).sum(), 1, self.num_models))
                             )
                         for j, pred in enumerate(preds):
                             individual_preds[j][:, :, i] = pred
                     else:
-                        individual_preds = np.expand_dims(np.array(preds), axis=-1)
+                        individual_preds = np.expand_dims(
+                            np.array(preds), axis=-1)
             else:
                 sum_preds += np.array(preds)
                 sum_squared += np.square(preds)
@@ -936,7 +954,8 @@ class EvidentialEpistemicPredictor(UncertaintyPredictor):
                 atom_bond_scaler=atom_bond_scaler,
                 return_unc_parameters=True,
             )
-            var = np.array(betas) / (np.array(lambdas) * (np.array(alphas) - 1))
+            var = np.array(betas) / (np.array(lambdas)
+                                     * (np.array(alphas) - 1))
             if i == 0:
                 sum_preds = np.array(preds)
                 sum_squared = np.square(preds)
@@ -951,16 +970,19 @@ class EvidentialEpistemicPredictor(UncertaintyPredictor):
                         individual_preds = []
                         for _ in model.atom_targets:
                             individual_preds.append(
-                                np.zeros((np.array(n_atoms).sum(), 1, self.num_models))
+                                np.zeros(
+                                    (np.array(n_atoms).sum(), 1, self.num_models))
                             )
                         for _ in model.bond_targets:
                             individual_preds.append(
-                                np.zeros((np.array(n_bonds).sum(), 1, self.num_models))
+                                np.zeros(
+                                    (np.array(n_bonds).sum(), 1, self.num_models))
                             )
                         for j, pred in enumerate(preds):
                             individual_preds[j][:, :, i] = pred
                     else:
-                        individual_preds = np.expand_dims(np.array(preds), axis=-1)
+                        individual_preds = np.expand_dims(
+                            np.array(preds), axis=-1)
             else:
                 sum_preds += np.array(preds)
                 sum_squared += np.square(preds)
@@ -1093,16 +1115,19 @@ class EnsemblePredictor(UncertaintyPredictor):
                         individual_preds = []
                         for _ in model.atom_targets:
                             individual_preds.append(
-                                np.zeros((np.array(n_atoms).sum(), 1, self.num_models))
+                                np.zeros(
+                                    (np.array(n_atoms).sum(), 1, self.num_models))
                             )
                         for _ in model.bond_targets:
                             individual_preds.append(
-                                np.zeros((np.array(n_bonds).sum(), 1, self.num_models))
+                                np.zeros(
+                                    (np.array(n_bonds).sum(), 1, self.num_models))
                             )
                         for j, pred in enumerate(preds):
                             individual_preds[j][:, :, i] = pred
                     else:
-                        individual_preds = np.expand_dims(np.array(preds), axis=-1)
+                        individual_preds = np.expand_dims(
+                            np.array(preds), axis=-1)
                 if model.train_class_sizes is not None:
                     self.train_class_sizes = [model.train_class_sizes]
             else:
@@ -1125,7 +1150,8 @@ class EnsemblePredictor(UncertaintyPredictor):
             for pred, squared in zip(sum_preds, sum_squared):
                 uncal_pred = pred / self.num_models
                 uncal_var = (
-                    squared / self.num_models - np.square(pred) / self.num_models**2
+                    squared / self.num_models -
+                    np.square(pred) / self.num_models**2
                 )
                 uncal_preds.append(uncal_pred)
                 uncal_vars.append(uncal_var)
@@ -1212,7 +1238,7 @@ class DropoutPredictor(UncertaintyPredictor):
                     bond_descriptor_scaler, scale_bond_descriptors=True
                 )
         for i in range(self.dropout_sampling_size):
-            preds = predict(
+            preds, atts = predict(
                 model=model,
                 data_loader=self.test_data_loader,
                 scaler=scaler,
@@ -1220,6 +1246,7 @@ class DropoutPredictor(UncertaintyPredictor):
                 return_unc_parameters=False,
                 dropout_prob=self.uncertainty_dropout_p,
             )
+            self.attention_weights = atts
             if i == 0:
                 sum_preds = np.array(preds)
                 sum_squared = np.square(preds)
@@ -1262,7 +1289,7 @@ class DropoutPredictor(UncertaintyPredictor):
             )
 
     def get_uncal_output(self):
-        return self.uncal_vars
+        return self.uncal_vars, self.attention_weights
 
 
 class ClassPredictor(UncertaintyPredictor):
@@ -1328,16 +1355,19 @@ class ClassPredictor(UncertaintyPredictor):
                         individual_preds = []
                         for _ in model.atom_targets:
                             individual_preds.append(
-                                np.zeros((np.array(n_atoms).sum(), 1, self.num_models))
+                                np.zeros(
+                                    (np.array(n_atoms).sum(), 1, self.num_models))
                             )
                         for _ in model.bond_targets:
                             individual_preds.append(
-                                np.zeros((np.array(n_bonds).sum(), 1, self.num_models))
+                                np.zeros(
+                                    (np.array(n_bonds).sum(), 1, self.num_models))
                             )
                         for j, pred in enumerate(preds):
                             individual_preds[j][:, :, i] = pred
                     else:
-                        individual_preds = np.expand_dims(np.array(preds), axis=-1)
+                        individual_preds = np.expand_dims(
+                            np.array(preds), axis=-1)
                 if model.train_class_sizes is not None:
                     self.train_class_sizes = [model.train_class_sizes]
             else:
@@ -1441,7 +1471,7 @@ class DirichletPredictor(UncertaintyPredictor):
             alphas = np.array(alphas)
             S = np.sum(alphas, axis=2)
             num_classes = alphas.shape[2]
-            u =  num_classes / S
+            u = num_classes / S
 
             if i == 0:
                 sum_preds = np.array(preds)
@@ -1455,16 +1485,19 @@ class DirichletPredictor(UncertaintyPredictor):
                         individual_preds = []
                         for _ in model.atom_targets:
                             individual_preds.append(
-                                np.zeros((np.array(n_atoms).sum(), 1, self.num_models))
+                                np.zeros(
+                                    (np.array(n_atoms).sum(), 1, self.num_models))
                             )
                         for _ in model.bond_targets:
                             individual_preds.append(
-                                np.zeros((np.array(n_bonds).sum(), 1, self.num_models))
+                                np.zeros(
+                                    (np.array(n_bonds).sum(), 1, self.num_models))
                             )
                         for j, pred in enumerate(preds):
                             individual_preds[j][:, :, i] = pred
                     else:
-                        individual_preds = np.expand_dims(np.array(preds), axis=-1)
+                        individual_preds = np.expand_dims(
+                            np.array(preds), axis=-1)
                 if model.train_class_sizes is not None:
                     self.train_class_sizes = [model.train_class_sizes]
             else:

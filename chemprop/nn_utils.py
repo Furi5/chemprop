@@ -68,10 +68,13 @@ def index_select_ND(source: torch.Tensor, index: torch.Tensor) -> torch.Tensor:
     """
     index_size = index.size()  # (num_atoms/num_bonds, max_num_bonds)
     suffix_dim = source.size()[1:]  # (hidden_size,)
-    final_size = index_size + suffix_dim  # (num_atoms/num_bonds, max_num_bonds, hidden_size)
+    # (num_atoms/num_bonds, max_num_bonds, hidden_size)
+    final_size = index_size + suffix_dim
 
-    target = source.index_select(dim=0, index=index.view(-1))  # (num_atoms/num_bonds * max_num_bonds, hidden_size)
-    target = target.view(final_size)  # (num_atoms/num_bonds, max_num_bonds, hidden_size)
+    # (num_atoms/num_bonds * max_num_bonds, hidden_size)
+    target = source.index_select(dim=0, index=index.view(-1))
+    # (num_atoms/num_bonds, max_num_bonds, hidden_size)
+    target = target.view(final_size)
 
     return target
 
@@ -132,6 +135,7 @@ class NoamLR(_LRScheduler):
     total_epochs * steps_per_epoch`). This is roughly based on the learning rate
     schedule from `Attention is All You Need <https://arxiv.org/abs/1706.03762>`_, section 5.3.
     """
+
     def __init__(self,
                  optimizer: Optimizer,
                  warmup_epochs: List[Union[float, int]],
@@ -150,7 +154,8 @@ class NoamLR(_LRScheduler):
         :param final_lr: The final learning rate (achieved after :code:`total_epochs`).
         """
         if not (
-            len(optimizer.param_groups) == len(warmup_epochs) == len(total_epochs)
+            len(optimizer.param_groups) == len(
+                warmup_epochs) == len(total_epochs)
             == len(init_lr) == len(max_lr) == len(final_lr)
         ):
             raise ValueError(
@@ -175,11 +180,14 @@ class NoamLR(_LRScheduler):
 
         self.current_step = 0
         self.lr = init_lr
-        self.warmup_steps = (self.warmup_epochs * self.steps_per_epoch).astype(int)
+        self.warmup_steps = (self.warmup_epochs *
+                             self.steps_per_epoch).astype(int)
         self.total_steps = self.total_epochs * self.steps_per_epoch
-        self.linear_increment = (self.max_lr - self.init_lr) / self.warmup_steps
+        self.linear_increment = (
+            self.max_lr - self.init_lr) / self.warmup_steps
 
-        self.exponential_gamma = (self.final_lr / self.max_lr) ** (1 / (self.total_steps - self.warmup_steps))
+        self.exponential_gamma = (
+            self.final_lr / self.max_lr) ** (1 / (self.total_steps - self.warmup_steps))
 
         super(NoamLR, self).__init__(optimizer)
 
@@ -205,9 +213,12 @@ class NoamLR(_LRScheduler):
 
         for i in range(self.num_lrs):
             if self.current_step <= self.warmup_steps[i]:
-                self.lr[i] = self.init_lr[i] + self.current_step * self.linear_increment[i]
+                self.lr[i] = self.init_lr[i] + \
+                    self.current_step * self.linear_increment[i]
             elif self.current_step <= self.total_steps[i]:
-                self.lr[i] = self.max_lr[i] * (self.exponential_gamma[i] ** (self.current_step - self.warmup_steps[i]))
+                self.lr[i] = self.max_lr[i] * \
+                    (self.exponential_gamma[i] **
+                     (self.current_step - self.warmup_steps[i]))
             else:  # theoretically this case should never be reached since training should stop at total_steps
                 self.lr[i] = self.final_lr[i]
 
@@ -250,8 +261,8 @@ def visualize_bond_attention(viz_dir: str,
         atomSum_weights = np.zeros(a_size)
         for b in trange(b_start, b_start + b_size):
 
-            a1, a2 = mol_graph.b2a[b].item() - a_start, mol_graph.b2a[mol_graph.b2revb[b]].item() - a_start
-
+            a1, a2 = mol_graph.b2a[b].item(
+            ) - a_start, mol_graph.b2a[mol_graph.b2revb[b]].item() - a_start
 
             b_weights = attention_weights[b]
             a2b = mol_graph.a2b[a_start:a_start + a_size]
@@ -260,20 +271,19 @@ def visualize_bond_attention(viz_dir: str,
             a_weights = a_weights.cpu().data.numpy()
             atomSum_weights += a_weights
         Amean_weight = atomSum_weights / a_size
-        nanMean=np.nanmean(Amean_weight)
+        nanMean = np.nanmean(Amean_weight)
         fig = SimilarityMaps.GetSimilarityMapFromWeights(mol,
-                                                     Amean_weight - nanMean,
-                                                     colorMap=matplotlib.cm.bwr)
+                                                         Amean_weight - nanMean,
+                                                         colorMap=matplotlib.cm.bwr)
 
-
-        save_path = os.path.join(smiles_viz_dir, f'bond_{b - b_start}_depth_{depth}.png')
+        save_path = os.path.join(
+            smiles_viz_dir, f'bond_{b - b_start}_depth_{depth}.png')
         fig.savefig(save_path, bbox_inches='tight')
         plt.close(fig)
 
 
 def visualize_atom_attention(viz_dir: str,
-                             mol: Union[str, Chem.Mol, Tuple[Chem.Mol, Chem.Mol]],
-                             num_atoms: int,
+                             smiles: str,
                              attention_weights: torch.FloatTensor):
     """
     Saves figures of attention maps between atoms. Note: works on a single molecule, not in batch
@@ -283,21 +293,24 @@ def visualize_atom_attention(viz_dir: str,
     :param num_atoms: The number of atoms in this molecule.
     :param attention_weights: A num_atoms x num_atoms PyTorch FloatTensor containing attention weights.
     """
-    # mol = Chem.MolFromSmiles(smiles)
+    mol = Chem.MolFromSmiles(smiles)
+    num_atoms = mol.GetNumAtoms()
 
-    smiles_viz_dir = os.path.join(viz_dir, f'{Chem.inchi.MolToInchiKey(mol)}_{num_atoms}')
-    os.makedirs(smiles_viz_dir, exist_ok=True)
-    atomSum_weights=np.zeros(num_atoms)
+    # smiles_viz_dir = os.path.join(
+    #     viz_dir, f'{Chem.inchi.MolToInchiKey(mol)}_{num_atoms}')
+    # os.makedirs(smiles_viz_dir, exist_ok=True)
+
+    atomSum_weights = np.zeros(num_atoms)
     for a in range(num_atoms):
         a_weights = attention_weights[a].cpu().data.numpy()
-        atomSum_weights+=a_weights
-    Amean_weight=atomSum_weights/num_atoms
+        atomSum_weights += a_weights
+    Amean_weight = atomSum_weights/num_atoms
 
-    nanMean=np.nanmean(Amean_weight)
+    nanMean = np.nanmean(Amean_weight)
 
     fig = SimilarityMaps.GetSimilarityMapFromWeights(mol,
-                                                         Amean_weight-nanMean,
-                                                         colorMap=matplotlib.cm.bwr)
-    save_path = os.path.join(smiles_viz_dir, f'atom_{a}.png')
-    fig.savefig(save_path, bbox_inches='tight')
+                                                     Amean_weight-nanMean,
+                                                     colorMap=matplotlib.cm.PiYG)
+    # save_path = os.path.join(smiles_viz_dir, f'atom_{a}.png')
+    fig.savefig(viz_dir, bbox_inches='tight')
     plt.close(fig)

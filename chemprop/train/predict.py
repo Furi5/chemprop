@@ -16,6 +16,7 @@ def predict(
     scaler: StandardScaler = None,
     atom_bond_scaler: AtomBondScaler = None,
     return_unc_parameters: bool = False,
+    return_attention_weights: bool = True,
     dropout_prob: float = 0.0,
 ) -> List[List[float]]:
     """
@@ -43,7 +44,8 @@ def predict(
 
     preds = []
 
-    var, lambdas, alphas, betas = [], [], [], []  # only used if returning uncertainty parameters
+    # only used if returning uncertainty parameters
+    var, lambdas, alphas, betas = [], [], [], []
 
     for batch in tqdm(data_loader, disable=disable_progress_bar, leave=False):
         # Prepare batch
@@ -58,7 +60,8 @@ def predict(
 
         if model.is_atom_bond_targets:
             natoms, nbonds = batch.number_of_atoms, batch.number_of_bonds
-            natoms, nbonds = np.array(natoms).flatten(), np.array(nbonds).flatten()
+            natoms, nbonds = np.array(
+                natoms).flatten(), np.array(nbonds).flatten()
             constraints_batch = np.transpose(constraints_batch).tolist()
             device = next(model.parameters()).device
 
@@ -77,8 +80,10 @@ def predict(
                 else:
                     mean, std = atom_bond_scaler.means[ind][0], atom_bond_scaler.stds[ind][0]
                     for j, natom in enumerate(natoms):
-                        constraints_batch[ind][j] = (constraints_batch[ind][j] - natom * mean) / std
-                    constraints_batch[ind] = torch.tensor(constraints_batch[ind]).to(device)
+                        constraints_batch[ind][j] = (
+                            constraints_batch[ind][j] - natom * mean) / std
+                    constraints_batch[ind] = torch.tensor(
+                        constraints_batch[ind]).to(device)
                 ind += 1
             for i in range(len(model.bond_targets)):
                 if not model.bond_constraints[i]:
@@ -86,16 +91,20 @@ def predict(
                 else:
                     mean, std = atom_bond_scaler.means[ind][0], atom_bond_scaler.stds[ind][0]
                     for j, nbond in enumerate(nbonds):
-                        constraints_batch[ind][j] = (constraints_batch[ind][j] - nbond * mean) / std
-                    constraints_batch[ind] = torch.tensor(constraints_batch[ind]).to(device)
+                        constraints_batch[ind][j] = (
+                            constraints_batch[ind][j] - nbond * mean) / std
+                    constraints_batch[ind] = torch.tensor(
+                        constraints_batch[ind]).to(device)
                 ind += 1
             bond_types_batch = []
             for i in range(len(model.atom_targets)):
                 bond_types_batch.append(None)
             for i in range(len(model.bond_targets)):
                 if model.adding_bond_types and atom_bond_scaler is not None:
-                    mean, std = atom_bond_scaler.means[i+len(model.atom_targets)][0], atom_bond_scaler.stds[i+len(model.atom_targets)][0]
-                    bond_types = [(b.GetBondTypeAsDouble() - mean) / std for d in batch for b in d.mol[0].GetBonds()]
+                    mean, std = atom_bond_scaler.means[i+len(
+                        model.atom_targets)][0], atom_bond_scaler.stds[i+len(model.atom_targets)][0]
+                    bond_types = [(b.GetBondTypeAsDouble() - mean) /
+                                  std for d in batch for b in d.mol[0].GetBonds()]
                     bond_types = torch.FloatTensor(bond_types).to(device)
                     bond_types_batch.append(bond_types)
                 else:
@@ -105,7 +114,7 @@ def predict(
 
         # Make predictions
         with torch.no_grad():
-            batch_preds = model(
+            batch_preds, att_mols = model(
                 mol_batch,
                 features_batch,
                 atom_descriptors_batch,
@@ -217,12 +226,21 @@ def predict(
         betas = [np.concatenate(x) for x in zip(*betas)]
         lambdas = [np.concatenate(x) for x in zip(*lambdas)]
 
-    if return_unc_parameters:
+    if return_attention_weights and return_unc_parameters:
+        if model.loss_function == "mve":
+            return preds, var, att_mols
+        elif model.loss_function == "dirichlet":
+            return preds, alphas, att_mols
+        elif model.loss_function == "evidential":
+            return preds, lambdas, alphas, betas, att_mols
+    elif return_attention_weights:
+        return preds, att_mols
+    elif return_unc_parameters:
         if model.loss_function == "mve":
             return preds, var
         elif model.loss_function == "dirichlet":
             return preds, alphas
         elif model.loss_function == "evidential":
-            return preds, lambdas, alphas, betas
-
-    return preds
+            return preds, lambdas, alphas, betas, att_mols
+    else:
+        return preds

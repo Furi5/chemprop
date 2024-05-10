@@ -21,8 +21,9 @@ class attention_weight(nn.Module):
         super(attention_weight, self).__init__()
         self.hidden_size = args.hidden_size
         self.bias = args.bias
-        self.W_a = nn.Linear(self.hidden_size, self.hidden_size, bias=self.bias)
-        self.W_b = nn.Linear(self.hidden_size, self.hidden_size)
+        self.W_a = nn.Linear(
+            self.hidden_size, self.hidden_size, bias=self.bias)
+        self.W_b = nn.Linear(self.hidden_size, self.hidden_size)  # 改后，去掉一个线性层
         # Dropout
         self.dropout = nn.Dropout(args.dropout)
 
@@ -34,10 +35,12 @@ class attention_weight(nn.Module):
         att_w = F.softmax(att_w, dim=1)
         att_hiddens = torch.matmul(att_w, hiddens)
         att_hiddens = self.act_func(self.W_b(att_hiddens))
+        # att_hiddens = self.act_func(att_hiddens)
         att_hiddens = self.dropout(att_hiddens)
         mol_vec = (hiddens + att_hiddens)
+        # mol_vec = att_hiddens
         return mol_vec, att_w
-        
+
 
 class MPNEncoder(nn.Module):
     """An :class:`MPNEncoder` is a message passing neural network for encoding a molecule."""
@@ -75,14 +78,15 @@ class MPNEncoder(nn.Module):
         self.act_func = get_activation_function(args.activation)
 
         # Cached zeros
-        self.cached_zero_vector = nn.Parameter(torch.zeros(self.hidden_size), requires_grad=False)
+        self.cached_zero_vector = nn.Parameter(
+            torch.zeros(self.hidden_size), requires_grad=False)
 
         # Input
         input_dim = self.atom_fdim if self.atom_messages else self.bond_fdim
         self.W_i = nn.Linear(input_dim, self.hidden_size, bias=self.bias)
 
         self.num_tasks = args.num_tasks
-        
+
         if self.atom_messages:
             w_h_input_size = self.hidden_size + self.bond_fdim
         else:
@@ -90,8 +94,8 @@ class MPNEncoder(nn.Module):
 
         self.W_h = nn.Linear(w_h_input_size, self.hidden_size, bias=self.bias)
 
-        self.W_o = nn.Linear(self.atom_fdim + self.hidden_size, self.hidden_size)
-
+        self.W_o = nn.Linear(
+            self.atom_fdim + self.hidden_size, self.hidden_size)
 
         if self.attention:
             self.attention_list = nn.ModuleList()
@@ -99,7 +103,8 @@ class MPNEncoder(nn.Module):
                 self.attention_list.append(attention_weight(args))
 
         if self.is_atom_bond_targets:
-            self.W_o_b = nn.Linear(self.bond_fdim + self.hidden_size, self.hidden_size)
+            self.W_o_b = nn.Linear(
+                self.bond_fdim + self.hidden_size, self.hidden_size)
 
         if args.atom_descriptors == 'descriptor':
             self.atom_descriptors_size = args.atom_descriptors_size
@@ -110,7 +115,7 @@ class MPNEncoder(nn.Module):
             self.bond_descriptors_size = args.bond_descriptors_size
             self.bond_descriptors_layer = nn.Linear(self.hidden_size + self.bond_descriptors_size,
                                                     self.hidden_size + self.bond_descriptors_size,)
-        
+
     def forward(self,
                 mol_graph: BatchMolGraph,
                 atom_descriptors_batch: List[np.ndarray] = None,
@@ -125,24 +130,32 @@ class MPNEncoder(nn.Module):
         :return: A PyTorch tensor of shape :code:`(num_molecules, hidden_size)` containing the encoding of each molecule.
         """
         if atom_descriptors_batch is not None:
-            atom_descriptors_batch = [np.zeros([1, atom_descriptors_batch[0].shape[1]])] + atom_descriptors_batch   # padding the first with 0 to match the atom_hiddens
-            atom_descriptors_batch = torch.from_numpy(np.concatenate(atom_descriptors_batch, axis=0)).float().to(self.device)
+            # padding the first with 0 to match the atom_hiddens
+            atom_descriptors_batch = [
+                np.zeros([1, atom_descriptors_batch[0].shape[1]])] + atom_descriptors_batch
+            atom_descriptors_batch = torch.from_numpy(np.concatenate(
+                atom_descriptors_batch, axis=0)).float().to(self.device)
 
-        f_atoms, f_bonds, a2b, b2a, b2revb, a_scope, b_scope = mol_graph.get_components(atom_messages=self.atom_messages)
-        f_atoms, f_bonds, a2b, b2a, b2revb = f_atoms.to(self.device), f_bonds.to(self.device), a2b.to(self.device), b2a.to(self.device), b2revb.to(self.device)
+        f_atoms, f_bonds, a2b, b2a, b2revb, a_scope, b_scope = mol_graph.get_components(
+            atom_messages=self.atom_messages)
+        f_atoms, f_bonds, a2b, b2a, b2revb = f_atoms.to(self.device), f_bonds.to(
+            self.device), a2b.to(self.device), b2a.to(self.device), b2revb.to(self.device)
 
         if self.is_atom_bond_targets:
             b2br = mol_graph.get_b2br().to(self.device)
             if bond_descriptors_batch is not None:
                 forward_index = b2br[:, 0]
                 backward_index = b2br[:, 1]
-                descriptors_batch = np.concatenate(bond_descriptors_batch, axis=0)
-                bond_descriptors_batch = np.zeros([descriptors_batch.shape[0] * 2 + 1, descriptors_batch.shape[1]])
+                descriptors_batch = np.concatenate(
+                    bond_descriptors_batch, axis=0)
+                bond_descriptors_batch = np.zeros(
+                    [descriptors_batch.shape[0] * 2 + 1, descriptors_batch.shape[1]])
                 for i, fi in enumerate(forward_index):
                     bond_descriptors_batch[fi] = descriptors_batch[i]
                 for i, fi in enumerate(backward_index):
                     bond_descriptors_batch[fi] = descriptors_batch[i]
-                bond_descriptors_batch = torch.from_numpy(bond_descriptors_batch).float().to(self.device)
+                bond_descriptors_batch = torch.from_numpy(
+                    bond_descriptors_batch).float().to(self.device)
 
         # Input
         if self.atom_messages:
@@ -157,14 +170,19 @@ class MPNEncoder(nn.Module):
                 message = (message + message[b2revb]) / 2
 
             if self.atom_messages:
-                nei_a_message = index_select_ND(message, a2a)  # num_atoms x max_num_bonds x hidden
-                nei_f_bonds = index_select_ND(f_bonds, a2b)  # num_atoms x max_num_bonds x bond_fdim
-                nei_message = torch.cat((nei_a_message, nei_f_bonds), dim=2)  # num_atoms x max_num_bonds x hidden + bond_fdim
-                message = nei_message.sum(dim=1)  # num_atoms x hidden + bond_fdim
+                # num_atoms x max_num_bonds x hidden
+                nei_a_message = index_select_ND(message, a2a)
+                # num_atoms x max_num_bonds x bond_fdim
+                nei_f_bonds = index_select_ND(f_bonds, a2b)
+                # num_atoms x max_num_bonds x hidden + bond_fdim
+                nei_message = torch.cat((nei_a_message, nei_f_bonds), dim=2)
+                # num_atoms x hidden + bond_fdim
+                message = nei_message.sum(dim=1)
             else:
                 # m(a1 -> a2) = [sum_{a0 \in nei(a1)} m(a0 -> a1)] - m(a2 -> a1)
                 # message      a_message = sum(nei_a_message)      rev_message
-                nei_a_message = index_select_ND(message, a2b)  # num_atoms x max_num_bonds x hidden
+                # num_atoms x max_num_bonds x hidden
+                nei_a_message = index_select_ND(message, a2b)
                 a_message = nei_a_message.sum(dim=1)  # num_atoms x hidden
                 rev_message = message[b2revb]  # num_bonds x hidden
                 message = a_message[b2a] - rev_message  # num_bonds x hidden
@@ -175,39 +193,54 @@ class MPNEncoder(nn.Module):
 
         # atom hidden
         a2x = a2a if self.atom_messages else a2b
-        nei_a_message = index_select_ND(message, a2x)  # num_atoms x max_num_bonds x hidden
+        # num_atoms x max_num_bonds x hidden
+        nei_a_message = index_select_ND(message, a2x)
         a_message = nei_a_message.sum(dim=1)  # num_atoms x hidden
-        a_input = torch.cat([f_atoms, a_message], dim=1)  # num_atoms x (atom_fdim + hidden)
+        # num_atoms x (atom_fdim + hidden)
+        a_input = torch.cat([f_atoms, a_message], dim=1)
         atom_hiddens = self.act_func(self.W_o(a_input))  # num_atoms x hidden
         atom_hiddens = self.dropout(atom_hiddens)  # num_atoms x hidden
 
         # bond hidden
         if self.is_atom_bond_targets:
-            b_input = torch.cat([f_bonds, message], dim=1)  # num_bonds x (bond_fdim + hidden)
-            bond_hiddens = self.act_func(self.W_o_b(b_input))  # num_bonds x hidden
+            # num_bonds x (bond_fdim + hidden)
+            b_input = torch.cat([f_bonds, message], dim=1)
+            bond_hiddens = self.act_func(
+                self.W_o_b(b_input))  # num_bonds x hidden
             bond_hiddens = self.dropout(bond_hiddens)  # num_bonds x hidden
 
         # concatenate the atom descriptors
         if atom_descriptors_batch is not None:
             if len(atom_hiddens) != len(atom_descriptors_batch):
-                raise ValueError('The number of atoms is different from the length of the extra atom features')
+                raise ValueError(
+                    'The number of atoms is different from the length of the extra atom features')
 
-            atom_hiddens = torch.cat([atom_hiddens, atom_descriptors_batch], dim=1)     # num_atoms x (hidden + descriptor size)
-            atom_hiddens = self.atom_descriptors_layer(atom_hiddens)                    # num_atoms x (hidden + descriptor size)
-            atom_hiddens = self.dropout(atom_hiddens)                             # num_atoms x (hidden + descriptor size)
+            # num_atoms x (hidden + descriptor size)
+            atom_hiddens = torch.cat(
+                [atom_hiddens, atom_descriptors_batch], dim=1)
+            # num_atoms x (hidden + descriptor size)
+            atom_hiddens = self.atom_descriptors_layer(atom_hiddens)
+            # num_atoms x (hidden + descriptor size)
+            atom_hiddens = self.dropout(atom_hiddens)
 
         # concatenate the bond descriptors
         if self.is_atom_bond_targets and bond_descriptors_batch is not None:
             if len(bond_hiddens) != len(bond_descriptors_batch):
-                raise ValueError('The number of bonds is different from the length of the extra bond features')
+                raise ValueError(
+                    'The number of bonds is different from the length of the extra bond features')
 
-            bond_hiddens = torch.cat([bond_hiddens, bond_descriptors_batch], dim=1)     # num_bonds x (hidden + descriptor size)
-            bond_hiddens = self.bond_descriptors_layer(bond_hiddens)                    # num_bonds x (hidden + descriptor size)
-            bond_hiddens = self.dropout(bond_hiddens)                             # num_bonds x (hidden + descriptor size)
+            # num_bonds x (hidden + descriptor size)
+            bond_hiddens = torch.cat(
+                [bond_hiddens, bond_descriptors_batch], dim=1)
+            # num_bonds x (hidden + descriptor size)
+            bond_hiddens = self.bond_descriptors_layer(bond_hiddens)
+            # num_bonds x (hidden + descriptor size)
+            bond_hiddens = self.dropout(bond_hiddens)
 
         # Readout
         if self.is_atom_bond_targets:
-            return atom_hiddens, a_scope, bond_hiddens, b_scope, b2br  # num_atoms x hidden, remove the first one which is zero padding
+            # num_atoms x hidden, remove the first one which is zero padding
+            return atom_hiddens, a_scope, bond_hiddens, b_scope, b2br
 
         att_tasks = []
         mol_vecs_tasks = []
@@ -221,7 +254,7 @@ class MPNEncoder(nn.Module):
                     cur_hiddens = atom_hiddens.narrow(0, a_start, a_size)
                     if self.attention:
                         mol_vec, att_task = self.attention_list[j](cur_hiddens)
-                        att_mols.append(att_task)
+                        att_mols.append(att_task.data.cpu())
                     else:
                         mol_vec = cur_hiddens  # (num_atoms, hidden_size)
                     if self.aggregation == 'mean':
@@ -231,13 +264,14 @@ class MPNEncoder(nn.Module):
                     elif self.aggregation == 'norm':
                         mol_vec = mol_vec.sum(dim=0) / self.aggregation_norm
                     mol_vecs.append(mol_vec)
-            
+
             att_tasks.append(att_mols)
-            
-            mol_vecs = torch.stack(mol_vecs, dim=0)  # (num_molecules, hidden_size)
+            # (num_molecules, hidden_size)
+            mol_vecs = torch.stack(mol_vecs, dim=0)
             mol_vecs_tasks.append(mol_vecs)
-            
-        mol_vecs_tasks = torch.stack(mol_vecs_tasks, dim=0)  # (num_tasks, num_molecules, hidden_size)
+
+        # (num_tasks, num_molecules, hidden_size)
+        mol_vecs_tasks = torch.stack(mol_vecs_tasks, dim=0)
 
         return mol_vecs_tasks, att_tasks  # num_molecules x hidden
 
@@ -276,7 +310,8 @@ class MPN(nn.Module):
 
         if not self.reaction_solvent:
             if args.mpn_shared:
-                self.encoder = nn.ModuleList([MPNEncoder(args, self.atom_fdim, self.bond_fdim)] * args.number_of_molecules)
+                self.encoder = nn.ModuleList(
+                    [MPNEncoder(args, self.atom_fdim, self.bond_fdim)] * args.number_of_molecules)
             else:
                 self.encoder = nn.ModuleList([MPNEncoder(args, self.atom_fdim, self.bond_fdim)
                                              for _ in range(args.number_of_molecules)])
@@ -292,7 +327,6 @@ class MPN(nn.Module):
             self.encoder_solvent = MPNEncoder(args, self.atom_fdim_solvent, self.bond_fdim_solvent,
                                               args.hidden_size_solvent, args.bias_solvent, args.depth_solvent)
 
-    
     def forward(self,
                 batch: Union[List[List[str]], List[List[Chem.Mol]], List[List[Tuple[Chem.Mol, Chem.Mol]]], List[BatchMolGraph]],
                 features_batch: List[np.ndarray] = None,
@@ -353,7 +387,8 @@ class MPN(nn.Module):
                 batch = [mol2graph(b) for b in batch]
 
         if self.use_input_features:
-            features_batch = torch.from_numpy(np.stack(features_batch)).float().to(self.device)
+            features_batch = torch.from_numpy(
+                np.stack(features_batch)).float().to(self.device)
 
             if self.features_only:
                 return features_batch
@@ -363,7 +398,8 @@ class MPN(nn.Module):
                 raise NotImplementedError('Atom descriptors are currently only supported with one molecule '
                                           'per input (i.e., number_of_molecules = 1).')
 
-            encodings = [enc(ba, atom_descriptors_batch, bond_descriptors_batch) for enc, ba in zip(self.encoder, batch)]
+            encodings = [enc(ba, atom_descriptors_batch, bond_descriptors_batch)
+                         for enc, ba in zip(self.encoder, batch)]
         else:
             if not self.reaction_solvent:
                 encodings = [enc(ba) for enc, ba in zip(self.encoder, batch)]
@@ -375,7 +411,8 @@ class MPN(nn.Module):
                     else:
                         encodings.append(self.encoder_solvent(ba))
 
-        output = encodings[0] if len(encodings) == 1 else torch.cat(encodings, dim=1)
+        output = encodings[0] if len(
+            encodings) == 1 else torch.cat(encodings, dim=1)
 
         if self.use_input_features:
             if len(features_batch.shape) == 1:
@@ -384,18 +421,3 @@ class MPN(nn.Module):
             output = torch.cat([output, features_batch], dim=1)
 
         return output
-
-    def viz_attention(self, batch: Union[List[str], BatchMolGraph],
-                      features_batch: List[np.ndarray] = None,
-                      viz_dir: str = None):
-        """
-        Visualizes attention weights for a batch of molecular SMILES strings
-        :param viz_dir: Directory in which to save visualized attention weights.
-        :param batch: A list of SMILES strings or a BatchMolGraph (if self.graph_input).
-        :param features_batch: A list of ndarrays containing additional features.
-        """
-        if not self.graph_input:
-            batch = mol2graph(batch, self.args)
-
-        self.encoder.forward(batch, features_batch, viz_dir=viz_dir)
-        print(f'usei++++++++++++++++++++++++++++++++++++++++viz_attention')

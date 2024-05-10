@@ -10,7 +10,7 @@ from .ffn import build_ffn, MultiReadout
 from chemprop.args import TrainArgs
 from chemprop.features import BatchMolGraph
 from chemprop.nn_utils import initialize_weights
-    
+
 
 class MoleculeModel(nn.Module):
     """A :class:`MoleculeModel` is a model which contains a message passing network following by feed-forward layers."""
@@ -23,7 +23,6 @@ class MoleculeModel(nn.Module):
         self.classification = args.dataset_type == "classification"
         self.multiclass = args.dataset_type == "multiclass"
         self.loss_function = args.loss_function
-       
 
         if hasattr(args, "train_class_sizes"):
             self.train_class_sizes = args.train_class_sizes
@@ -142,16 +141,16 @@ class MoleculeModel(nn.Module):
 
             for i in range(args.num_tasks):
                 self.readout_list.append(
-                                build_ffn(
-                                    first_linear_dim=atom_first_linear_dim,
-                                    hidden_size=args.ffn_hidden_size + args.atom_descriptors_size,
-                                    num_layers=args.ffn_num_layers,
-                                    output_size=1,
-                                    dropout=args.dropout,
-                                    activation=args.activation,
-                                    dataset_type=args.dataset_type,
-                                    spectra_activation=args.spectra_activation,)       
-                                              )
+                    build_ffn(
+                        first_linear_dim=atom_first_linear_dim,
+                        hidden_size=args.ffn_hidden_size + args.atom_descriptors_size,
+                        num_layers=args.ffn_num_layers,
+                        output_size=1,
+                        dropout=args.dropout,
+                        activation=args.activation,
+                        dataset_type=args.dataset_type,
+                        spectra_activation=args.spectra_activation,)
+                )
 
             # self.readout = build_ffn(
             #     first_linear_dim=atom_first_linear_dim,
@@ -169,28 +168,28 @@ class MoleculeModel(nn.Module):
                 if self.is_atom_bond_targets:
                     if args.shared_atom_bond_ffn:
                         for param in list(self.readout.atom_ffn_base.parameters())[
-                            0 : 2 * args.frzn_ffn_layers
+                            0: 2 * args.frzn_ffn_layers
                         ]:
                             param.requires_grad = False
                         for param in list(self.readout.bond_ffn_base.parameters())[
-                            0 : 2 * args.frzn_ffn_layers
+                            0: 2 * args.frzn_ffn_layers
                         ]:
                             param.requires_grad = False
                     else:
                         for ffn in self.readout.ffn_list:
                             if ffn.constraint:
                                 for param in list(ffn.ffn.parameters())[
-                                    0 : 2 * args.frzn_ffn_layers
+                                    0: 2 * args.frzn_ffn_layers
                                 ]:
                                     param.requires_grad = False
                             else:
                                 for param in list(ffn.ffn_readout.parameters())[
-                                    0 : 2 * args.frzn_ffn_layers
+                                    0: 2 * args.frzn_ffn_layers
                                 ]:
                                     param.requires_grad = False
                 else:
                     for param in list(self.readout.parameters())[
-                        0 : 2 * args.frzn_ffn_layers
+                        0: 2 * args.frzn_ffn_layers
                     ]:  # Freeze weights and bias for given number of layers
                         param.requires_grad = False
 
@@ -246,7 +245,8 @@ class MoleculeModel(nn.Module):
                 )
             )
         else:
-            raise ValueError(f"Unsupported fingerprint type {fingerprint_type}.")
+            raise ValueError(
+                f"Unsupported fingerprint type {fingerprint_type}.")
 
     def forward(
         self,
@@ -289,7 +289,8 @@ class MoleculeModel(nn.Module):
                 bond_descriptors_batch,
                 bond_features_batch,
             )
-            output = self.readout(encodings, constraints_batch, bond_types_batch)
+            output = self.readout(
+                encodings, constraints_batch, bond_types_batch)
         else:
             encodings, att = self.encoder(
                 batch,
@@ -298,8 +299,8 @@ class MoleculeModel(nn.Module):
                 atom_features_batch,
                 bond_descriptors_batch,
                 bond_features_batch,
-            ) # size([50,300])
-            
+            )  # size([50,300])
+
             outputs = []
             for i in range(self.num_tasks):
                 output = self.readout_list[i](encodings[i])
@@ -307,7 +308,6 @@ class MoleculeModel(nn.Module):
                 outputs.append(output)
             output = torch.stack(outputs, dim=1)
             # output = self.readout(encodings) # ffn
-
 
         # Don't apply sigmoid during training when using BCEWithLogitsLoss
         if (
@@ -341,7 +341,8 @@ class MoleculeModel(nn.Module):
                     outputs.append(torch.cat([means, variances], axis=1))
                 return outputs
             else:
-                means, variances = torch.split(output, output.shape[1] // 2, dim=1)
+                means, variances = torch.split(
+                    output, output.shape[1] // 2, dim=1)
                 variances = self.softplus(variances)
                 output = torch.cat([means, variances], axis=1)
         if self.loss_function == "evidential":
@@ -356,7 +357,8 @@ class MoleculeModel(nn.Module):
                         self.softplus(alphas) + 1
                     )  # + min_val # add 1 for numerical contraints of Gamma function
                     betas = self.softplus(betas)  # + min_val
-                    outputs.append(torch.cat([means, lambdas, alphas, betas], dim=1))
+                    outputs.append(
+                        torch.cat([means, lambdas, alphas, betas], dim=1))
                 return outputs
             else:
                 means, lambdas, alphas, betas = torch.split(
@@ -377,4 +379,4 @@ class MoleculeModel(nn.Module):
             else:
                 output = nn.functional.softplus(output) + 1
 
-        return output
+        return output, att
