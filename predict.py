@@ -1,11 +1,10 @@
 """Loads a trained chemprop model checkpoint and makes predictions on a dataset."""
-import os
 import torch
-import chemprop
+import os
 import pandas as pd
-
-from chemprop.Process_runner import ProcessRunner
+import chemprop
 from chemprop.nn_utils import visualize_atom_attention
+from chemprop.Process_runner import ProcessRunner
 
 
 colnames_dict = {
@@ -219,7 +218,7 @@ def tox_predict(task,
     arguments = [
         '--test_path', smiles_file,
         '--preds_path', pred_file,
-        '--checkpoint_paths', f'/home/fuli/my_code/git/chemprop/checkpoints_att/{task}.pt',
+        '--checkpoint_paths', f'/home/websites/deepToxLab/chemprop_att/checkpoints_att/{task}.pt',
         "--num_workers", "0",
         '--uncertainty_method', 'dropout',
         "--no_cuda",
@@ -274,6 +273,11 @@ def main(smiles_list):
             all_preds = pd.concat([all_preds, preds_df], axis=1)
             all_attention = pd.concat([all_attention, attention_df], axis=1)
         all_preds.index.name = 'SMILES'
+    rows_to_remove = ["Honey_bee_toxicity", "Honey_bee_toxicity_uncertainty",
+                      "LC50_Mallard_Duck", "LC50_Mallard_Duck_uncertainty"]
+    all_preds = all_preds.drop(rows_to_remove)
+    all_attention = all_attention.drop(
+        ["Honey_bee_toxicity", "LC50_Mallard_Duck"])
     return all_preds, all_attention
 
 
