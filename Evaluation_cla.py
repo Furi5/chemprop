@@ -136,7 +136,10 @@ def random_multiple(task, test_path, pred_path, split_times, output_path):
     df = pd.DataFrame()
     for i in range(split_times):
         i += 1
-        test_file = f'{test_path}/{i}/{task}_test.csv'
+        if task in ['Cell', 'Drug']:
+            test_file = f'{test_path}/{i}/test.csv'
+        else:
+            test_file = f'{test_path}/{i}/{task}_test.csv'
         pred_file = f'{pred_path}/{task}_{i}_model/test_preds.csv'
         test_data = pd.read_csv(test_file)
         predict_data = pd.read_csv(pred_file)
@@ -190,14 +193,14 @@ if __name__ == '__main__':
 
     random_multiple(
         task='Cell',
-        test_path='/home/fuli/my_code/git/tox_data/tox_data_v1/Cell',
+        test_path='/home/fuli/my_code/git/tox_data/tox_data_v2/multiple_task/Cell',
         pred_path='/home/fuli/my_code/git/chemprop/checkpoints/att/Cell',
         split_times=1,
         output_path='ModelPerformance/att/cla/Cell')
 
-    # random_multiple(
-    #     task='Drug',
-    #     test_path='/home/fuli/my_code/git/tox_data/tox_data_v1/Drug/cla',
-    #     pred_path='/home/fuli/my_code/git/chemprop/checkpoints/att/Drug/cla',
-    #     split_times=1,
-    #     output_path='ModelPerformance/att/cla/Drug')
+    random_multiple(
+        task='Drug',
+        test_path='/home/fuli/my_code/git/tox_data/tox_data_v2/multiple_task/Basic',
+        pred_path='/home/fuli/my_code/git/chemprop/checkpoints/att/Drug/cla',
+        split_times=1,
+        output_path='ModelPerformance/att/cla/Drug')
