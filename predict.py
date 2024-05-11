@@ -218,7 +218,7 @@ def tox_predict(task,
     arguments = [
         '--test_path', smiles_file,
         '--preds_path', pred_file,
-        '--checkpoint_paths', f'/home/websites/deepToxLab/deepToxLab-backend/api/chemprop_att/{task}.pt',
+        '--checkpoint_paths', f'/home/websites/deepToxLab/deepToxLab-backend/api/chemprop_att/checkpoints_att/{task}.pt',
         "--num_workers", "0",
         '--uncertainty_method', 'dropout',
         "--no_cuda"
