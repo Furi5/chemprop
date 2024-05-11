@@ -218,11 +218,10 @@ def tox_predict(task,
     arguments = [
         '--test_path', smiles_file,
         '--preds_path', pred_file,
-        '--checkpoint_paths', f'/home/websites/deepToxLab/chemprop_att/checkpoints_att/{task}.pt',
+        '--checkpoint_paths', f'/home/websites/deepToxLab/deepToxLab-backend/api/chemprop_att/{task}.pt',
         "--num_workers", "0",
         '--uncertainty_method', 'dropout',
-        "--no_cuda",
-
+        "--no_cuda"
     ]
 
     args = chemprop.args.PredictArgs().parse_args(arguments)
@@ -243,16 +242,15 @@ def tox_predict(task,
 
     cols = [col for cols in zip(
         colnames_dict[task], [col+'_uncertainty' for col in colnames_dict[task]]) for col in cols]
+
     sub_df = pd.concat([sub_df, sub_uncertainty], axis=1)
     sub_df = sub_df[cols]
 
     attention_df = pd.DataFrame(
         att,
-        columns=smiles_list,
-        index=colnames_dict[task]
+        columns=colnames_dict[task],
+        index=smiles_list
     )
-
-    attention_df = attention_df.T
 
     return sub_df, attention_df
 
@@ -275,9 +273,9 @@ def main(smiles_list):
         all_preds.index.name = 'SMILES'
     rows_to_remove = ["Honey_bee_toxicity", "Honey_bee_toxicity_uncertainty",
                       "LC50_Mallard_Duck", "LC50_Mallard_Duck_uncertainty"]
-    all_preds = all_preds.drop(rows_to_remove)
+    all_preds = all_preds.drop(rows_to_remove, axis=1)
     all_attention = all_attention.drop(
-        ["Honey_bee_toxicity", "LC50_Mallard_Duck"])
+        ["Honey_bee_toxicity", "LC50_Mallard_Duck"], axis=1)
     return all_preds, all_attention
 
 
@@ -294,7 +292,7 @@ def visualize_attention(
 
 if __name__ == '__main__':
     import time
-    smiles_list = ['CCC', 'CCCC', 'OCC']
+    smiles_list = ['123', 'CCC', 'CCCC', 'OCC']
     start = time.time()
     with suppress_stdout_stderr():  # suppress_stdout_stderr() 用于屏蔽 chemprop 的输出
         preds_df, attention_df = main(smiles_list)
@@ -306,5 +304,5 @@ if __name__ == '__main__':
     print(attention_df)
 
     svg_str = visualize_attention(
-        smiles_list[1], attention_df.loc[smiles_list[1], 'Nephrotoxicity'])
+        smiles_list[1], attention_df.loc[smiles_list[1], 'ADORA2A'])
     print(svg_str)

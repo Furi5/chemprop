@@ -346,7 +346,16 @@ def predict_and_save(
                 for i, evaluation_method in enumerate(args.evaluation_methods):
                     writer.writerow([evaluation_method] + evaluations[i])
 
+    new_att = []
+    for full_index in range(len(att[0])):
+        new_row = []
+        for full_task_index in range(len(att)):
+            new_row.append(att[full_task_index][full_index])
+        new_att.append(new_row)
+    att = new_att
+
     if return_invalid_smiles:
+        full_att = []
         full_preds = []
         full_unc = []
         for full_index in range(len(full_data)):
@@ -354,12 +363,15 @@ def predict_and_save(
             if valid_index is not None:
                 pred = preds[valid_index]
                 un = unc[valid_index]
+                atts = att[valid_index]
             else:
                 pred = ["Invalid SMILES"] * num_tasks
                 un = ["Invalid SMILES"] * num_unc_tasks
+                atts = ["Invalid SMILES"] * num_tasks
             full_preds.append(pred)
             full_unc.append(un)
-        return full_preds, full_unc, att
+            full_att.append(atts)
+        return full_preds, full_unc, full_att
     else:
         return preds, unc, att
 

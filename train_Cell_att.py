@@ -39,7 +39,6 @@ train_arguments = [
     '--separate_val_path', f'/home/fuli/my_code/git/tox_data/tox_data_v2/multiple_task/Cell/{input_args.file}/val.csv',
     '--separate_test_path', f'/home/fuli/my_code/git/tox_data/tox_data_v2/multiple_task/Cell/{input_args.file}/test.csv',
     '--config_path', f'checkpoints/DMPNN/{task}/{task}_hyperopt/config.json',
-    '--loss_function', '--dirichlet',
     '--dataset_type', 'classification',
     '--save_dir', f'checkpoints/att/{task}/{task}_{input_args.file}_model',
     '--epochs', '30',

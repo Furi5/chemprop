@@ -41,9 +41,8 @@ train_arguments = [
     '--config_path', f'checkpoints/{task}/{task}_hyperopt/config.json',
     '--dataset_type', 'classification',
     '--save_dir', f'checkpoints/att/{task}/{task}_{input_args.file}_model',
-    '--epochs', '100',
+    '--epochs', '30',
     '--gpu', str(input_args.gpu),
-    '--loss_function', '--dirichlet',
     '--save_smiles_splits',
     '--save_preds',
 ]
