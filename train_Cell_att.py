@@ -41,7 +41,7 @@ train_arguments = [
     '--config_path', f'checkpoints/DMPNN/{task}/{task}_hyperopt/config.json',
     '--dataset_type', 'classification',
     '--save_dir', f'checkpoints/att/{task}/{task}_{input_args.file}_model',
-    '--epochs', '30',
+    '--epochs', '1',
     '--batch_size', '128',
     '--gpu', str(input_args.gpu),
     '--save_smiles_splits',
