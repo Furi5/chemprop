@@ -30,19 +30,20 @@ gpu = 0
 
 # ---------------train-------------#
 parser = argparse.ArgumentParser()
-parser.add_argument('--file', help='file iter')
-parser.add_argument('--gpu', help='gpu id')
+parser.add_argument('--file', help='file iter', default=1)
+parser.add_argument('--gpu', help='gpu id', default=0)
 input_args = parser.parse_args()
 
 train_arguments = [
     '--data_path', f'/home/fuli/my_code/git/tox_data/tox_data_v2/multiple_task/Cell/{input_args.file}/train.csv',
     '--separate_val_path', f'/home/fuli/my_code/git/tox_data/tox_data_v2/multiple_task/Cell/{input_args.file}/val.csv',
     '--separate_test_path', f'/home/fuli/my_code/git/tox_data/tox_data_v2/multiple_task/Cell/{input_args.file}/test.csv',
-    '--config_path', f'checkpoints/DMPNN/{task}/{task}_hyperopt/config.json',
+    '--config_path', f'/home/fuli/my_code/git/chemprop/checkpoints/DMPNN/{task}/{task}_hyperopt/config.json',
     '--dataset_type', 'classification',
     '--save_dir', f'checkpoints/att/{task}/{task}_{input_args.file}_model',
-    '--epochs', '30',
+    '--epochs', '1',
     '--batch_size', '128',
+    '--num_workers', '0',
     '--gpu', str(input_args.gpu),
     '--save_smiles_splits',
     '--save_preds',

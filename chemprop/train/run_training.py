@@ -381,7 +381,7 @@ def run_training(args: TrainArgs,
             info(
                 f'Model {model_idx} provided with no test set, no metric evaluation will be performed.')
         else:
-            test_preds = predict(
+            test_preds, att = predict(
                 model=model,
                 data_loader=test_data_loader,
                 scaler=scaler,
