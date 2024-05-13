@@ -214,7 +214,8 @@ class suppress_stdout_stderr(object):
 
 def tox_predict(task,
                 smiles_file,
-                pred_file,):
+                pred_file,
+                smiles_list):
     arguments = [
         '--test_path', smiles_file,
         '--preds_path', pred_file,
@@ -266,7 +267,8 @@ def main(smiles_list):
         for task in colnames_dict.keys():
             preds_df, attention_df = tox_predict(task,
                                                  smiles_file,
-                                                 pred_file
+                                                 pred_file,
+                                                 smiles_list
                                                  )
             all_preds = pd.concat([all_preds, preds_df], axis=1)
             all_attention = pd.concat([all_attention, attention_df], axis=1)

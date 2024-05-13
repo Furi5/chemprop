@@ -30,18 +30,18 @@ gpu = 1
 
 # ---------------train-------------#
 parser = argparse.ArgumentParser()
-parser.add_argument('--file', help='file iter')
-parser.add_argument('--gpu', help='gpu id')
+parser.add_argument('--file', help='file iter', default=1)
+parser.add_argument('--gpu', help='gpu id', default=0)
 input_args = parser.parse_args()
 
 train_arguments = [
     '--data_path', f'/home/fuli/my_code/git/tox_data/tox_data_v1/{task}/cla/{input_args.file}/{task}_train.csv',
     '--separate_val_path', f'/home/fuli/my_code/git/tox_data/tox_data_v1/{task}/cla/{input_args.file}/{task}_valid.csv',
     '--separate_test_path', f'/home/fuli/my_code/git/tox_data/tox_data_v1/{task}/cla/{input_args.file}/{task}_test.csv',
-    '--config_path', f'checkpoints/{task}/cla/{task}_hyperopt/config.json',
+    '--config_path', f'/home/fuli/my_code/git/chemprop/checkpoints/DMPNN/Environments/cla/Environments_hyperopt/config.json',
     '--dataset_type', 'classification',
     '--save_dir', f'checkpoints/att/{task}/cla/{task}_{input_args.file}_model',
-    '--epochs', '30',
+    '--epochs', '1',
     '--gpu', str(input_args.gpu),
     '--save_smiles_splits',
     '--save_preds',
