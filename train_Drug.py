@@ -36,7 +36,7 @@ train_arguments = [
     '--data_path', f'/home/fl/my_code/Data/multiple_task/{task}/{input_args.file}/train.csv',
     '--separate_val_path', f'/home/fl/my_code/Data/multiple_task/{task}/{input_args.file}/val.csv',
     '--separate_test_path', f'/home/fl/my_code/Data/multiple_task/{task}/{input_args.file}/test.csv',
-    '--config_path', f'config/Basic.json',
+    '--config_path', 'config/Basic.json',
     '--dataset_type', 'classification',
     '--save_dir', f'checkpoints/DMPNN/{task}/{task}_{input_args.file}_model',
     '--epochs', '200',
