@@ -219,8 +219,8 @@ def tox_predict(task,
     arguments = [
         '--test_path', smiles_file,
         '--preds_path', pred_file,
-        # '--checkpoint_paths', f'/home/websites/deepToxLab/deepToxLab-backend/api/chemprop_att/checkpoints_att/{task}.pt',
-        '--checkpoint_paths', f'/home/fuli/my_code/git/chemprop/checkpoints_att/{task}.pt',
+        '--checkpoint_paths', f'/home/websites/deepToxLab/deepToxLab-backend/api/chemprop_att/checkpoints_att/{task}.pt',
+        # '--checkpoint_paths', f'/home/fuli/my_code/git/chemprop/checkpoints_att/{task}.pt',
         "--num_workers", "0",
         '--uncertainty_method', 'dropout',
         "--no_cuda"
@@ -273,7 +273,7 @@ def main(smiles_list):
                                                  )
             all_preds = pd.concat([all_preds, preds_df], axis=1)
             all_attention = pd.concat([all_attention, attention_df], axis=1)
-        all_preds.index.name = 'SMILES'
+        all_preds.index.name = 'smiles'
     rows_to_remove = ["Honey_bee_toxicity", "Honey_bee_toxicity_uncertainty",
                       "LC50_Mallard_Duck", "LC50_Mallard_Duck_uncertainty"]
     all_preds = all_preds.drop(rows_to_remove, axis=1)
