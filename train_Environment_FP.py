@@ -5,43 +5,47 @@ from chemprop.args import TrainArgs, HyperoptArgs
 from chemprop.hyperparameter_optimization import hyperopt
 
 task = 'Environments'
-gpu = 1
+parser = argparse.ArgumentParser()
+parser.add_argument('--file', help='file iter')
+parser.add_argument('--gpu', help='gpu id')
+input_args = parser.parse_args()
 
 
 # --------------- Hyperparameter Optimization-------------#
 # hyperparameter_arguments = [
-#     '--data_path', f'/home/fuli/my_code/git/tox_data/tox_data_v1/{task}/cla/{task}_train.csv',
-#     '--separate_val_path', f'/home/fuli/my_code/git/tox_data/tox_data_v1/{task}/cla/{task}_valid.csv',
-#     '--separate_test_path', f'/home/fuli/my_code/git/tox_data/tox_data_v1/{task}/cla/{task}_test.csv',
+#     '--data_path', f'/home/fuli/my_code/git/tox_data/tox_data_v1/{task}/cla/{input_args.file}/{task}_train.csv',
+#     '--separate_val_path', f'/home/fuli/my_code/git/tox_data/tox_data_v1/{task}/cla/{input_args.file}/{task}_valid.csv',
+#     '--separate_test_path', f'/home/fuli/my_code/git/tox_data/tox_data_v1/{task}/cla/{input_args.file}/{task}_test.csv',
+#     '--features_path', f'/home/fuli/my_code/git/tox_data/tox_data_v1_FP/{task}/cla/{input_args.file}/{task}_train_2d.npy',
+#     '--separate_val_features_path', f'/home/fuli/my_code/git/tox_data/tox_data_v1_FP/{task}/cla/{input_args.file}/{task}_valid_2d.npy',
+#     '--separate_test_features_path', f'/home/fuli/my_code/git/tox_data/tox_data_v1_FP/{task}/cla/{input_args.file}/{task}_test_2d.npy',
 #     '--dataset_type', 'classification',
-#     '--hyperopt_checkpoint_dir', f'checkpoints/{task}/cla/{task}_hyperopt',
-#     '--gpu', str(gpu),
+#     '--hyperopt_checkpoint_dir', f'checkpoints/DMPNN_FP/{task}/cla/{task}_hyperopt',
+#     '--gpu', str(input_args.gpu),
 #     '--batch_size', '128',
 #     '--num_iters', '10',
 #     '--epochs', '300',
 #     '--metric', 'auc',
 #     '--aggregation', 'norm',
 #     '--search_parameter_keywords', 'depth', 'ffn_num_layers', 'hidden_size', 'ffn_hidden_size', 'dropout',
-#     '--config_save_path', f'checkpoints/{task}/cla/{task}_hyperopt/config.json',
-#     '--log_dir', f'checkpoints/{task}/cla/{task}_hyperopt',
+#     '--config_save_path', f'checkpoints/DMPNN_FP/{task}/cla/{task}_hyperopt/config.json',
+#     '--log_dir', f'checkpoints/DMPNN_FP/{task}/cla/{task}_hyperopt',
 # ]
 # hy_args = HyperoptArgs().parse_args(hyperparameter_arguments)
 # hyperopt(args=hy_args)
 
 # ---------------train-------------#
-parser = argparse.ArgumentParser()
-parser.add_argument('--file', help='file iter')
-parser.add_argument('--gpu', help='gpu id')
-input_args = parser.parse_args()
-
 train_arguments = [
     '--data_path', f'/home/fuli/my_code/git/tox_data/tox_data_v1/{task}/cla/{input_args.file}/{task}_train.csv',
     '--separate_val_path', f'/home/fuli/my_code/git/tox_data/tox_data_v1/{task}/cla/{input_args.file}/{task}_valid.csv',
     '--separate_test_path', f'/home/fuli/my_code/git/tox_data/tox_data_v1/{task}/cla/{input_args.file}/{task}_test.csv',
-    '--config_path', f'checkpoints/{task}/cla/{task}_hyperopt/config.json',
+    '--features_path', f'/home/fuli/my_code/git/tox_data/tox_data_v1_FP/{task}/cla/{input_args.file}/{task}_train_2d.npy',
+    '--separate_val_features_path', f'/home/fuli/my_code/git/tox_data/tox_data_v1_FP/{task}/cla/{input_args.file}/{task}_valid_2d.npy',
+    '--separate_test_features_path', f'/home/fuli/my_code/git/tox_data/tox_data_v1_FP/{task}/cla/{input_args.file}/{task}_test_2d.npy',
+    '--config_path', f'checkpoints/DMPNN/{task}/cla/{task}_hyperopt/config.json',
     '--dataset_type', 'classification',
-    '--save_dir', f'checkpoints/{task}/cla/{task}_{input_args.file}_model',
-    '--epochs', '100',
+    '--save_dir', f'checkpoints/DMPNN_FP/{task}/cla/{task}_{input_args.file}_model',
+    '--epochs', '300',
     '--gpu', str(input_args.gpu),
     '--save_smiles_splits',
     '--save_preds',

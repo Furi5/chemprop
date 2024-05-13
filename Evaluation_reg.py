@@ -57,7 +57,7 @@ def random_multiple(task, test_path, pred_path, split_times, output_path):
     df = pd.DataFrame()
     for i in range(split_times):
         i += 1
-        test_file = f'{test_path}/{i}/{task}_test.csv'
+        test_file = f'{test_path}/{i}/test.csv'
         pred_file = f'{pred_path}/{task}_{i}_model/test_preds.csv'
         test_data = pd.read_csv(test_file)
         predict_data = pd.read_csv(pred_file)
@@ -71,15 +71,15 @@ def random_multiple(task, test_path, pred_path, split_times, output_path):
 
 if __name__ == '__main__':
     random_multiple(
-        task='Environments',
-        test_path='/home/fuli/my_code/git/tox_data/tox_data_v1/Environments/reg',
-        pred_path='/home/fuli/my_code/git/chemprop/checkpoints/att/Environments/reg',
-        split_times=1,
-        output_path='ModelPerformance/att/reg/Environments')
+        task='Environment_reg',
+        test_path='/home/fuli/my_code/git/tox_data/tox_data_v2/multiple_task/Environment_reg',
+        pred_path='/home/fuli/my_code/git/chemprop/checkpoints/DMPNN_Des/Environment_reg',
+        split_times=10,
+        output_path='ModelPerformance/DMPNN_Des/reg/Environment_reg')
 
     random_multiple(
-        task='Drug',
-        test_path='/home/fuli/my_code/git/tox_data/tox_data_v1/Drug/reg',
-        pred_path='/home/fuli/my_code/git/chemprop/checkpoints/att/Drug/reg',
-        split_times=1,
-        output_path='ModelPerformance/att/reg/Drug')
+        task='Basic_reg',
+        test_path='/home/fuli/my_code/git/tox_data/tox_data_v2/multiple_task/Basic_reg',
+        pred_path='/home/fuli/my_code/git/chemprop/checkpoints/DMPNN_Des/Basic_reg',
+        split_times=10,
+        output_path='ModelPerformance/DMPNN_Des/reg/Basic_reg')

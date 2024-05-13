@@ -10,15 +10,15 @@ from sklearn.metrics import precision_recall_curve, f1_score
 
 drug_order = [
     "Carcinogenicity",
-    "developmental_toxicity",
+    "Developmental_toxicity",
     "FDAMDD",
     "Genotoxicity",
     "Hemolytic",
     "Mitochondrial",
-    "neurotoxicity",
+    "Neurotoxicity",
     "ROA",
     "RPMI_8226",
-    "reproductive",
+    "Reproductive",
     "Respiratory",
     "TA100",
     "TA100_S9",
@@ -136,7 +136,7 @@ def random_multiple(task, test_path, pred_path, split_times, output_path):
     df = pd.DataFrame()
     for i in range(split_times):
         i += 1
-        if task in ['Cell', 'Drug']:
+        if task in ['Basic', 'Cell']:
             test_file = f'{test_path}/{i}/test.csv'
         else:
             test_file = f'{test_path}/{i}/{task}_test.csv'
@@ -146,7 +146,7 @@ def random_multiple(task, test_path, pred_path, split_times, output_path):
         test_df = multi_task_evaluation(test_data, predict_data)
         df = pd.concat([df, test_df], axis=0)
         print(i, 'done')
-    if task == 'Drug':
+    if task == 'Basic':
         df['task'] = pd.Categorical(
             df['task'], categories=drug_order, ordered=True)
 
@@ -159,48 +159,48 @@ if __name__ == '__main__':
     random_multiple(
         task='Target',
         test_path='/home/fuli/my_code/git/tox_data/tox_data_v1/Target',
-        pred_path='/home/fuli/my_code/git/chemprop/checkpoints/att/Target',
-        split_times=1,
-        output_path='ModelPerformance/att/cla/Target')
+        pred_path='/home/fuli/my_code/git/chemprop/checkpoints/DMPNN/Target',
+        split_times=10,
+        output_path='ModelPerformance/DMPNN/cla/Target')
 
     random_multiple(
         task='Clinical',
         test_path='/home/fuli/my_code/git/tox_data/tox_data_v1/Clinical',
-        pred_path='/home/fuli/my_code/git/chemprop/checkpoints/att/Clinical',
-        split_times=1,
-        output_path='ModelPerformance/att/cla/Clinical')
+        pred_path='/home/fuli/my_code/git/chemprop/checkpoints/DMPNN/Clinical',
+        split_times=10,
+        output_path='ModelPerformance/DMPNN/cla/Clinical')
 
     random_multiple(
         task='Environments',
         test_path='/home/fuli/my_code/git/tox_data/tox_data_v1/Environments/cla',
-        pred_path='/home/fuli/my_code/git/chemprop/checkpoints/att/Environments/cla',
-        split_times=1,
-        output_path='ModelPerformance/att/cla/Environments')
+        pred_path='/home/fuli/my_code/git/chemprop/checkpoints/DMPNN/Environments',
+        split_times=10,
+        output_path='ModelPerformance/DMPNN/cla/Environments')
 
     random_multiple(
         task='Organ',
         test_path='/home/fuli/my_code/git/tox_data/tox_data_v1/Organ',
-        pred_path='/home/fuli/my_code/git/chemprop/checkpoints/att/Organ',
-        split_times=1,
-        output_path='ModelPerformance/att/cla/Organ')
+        pred_path='/home/fuli/my_code/git/chemprop/checkpoints/DMPNN/Organ',
+        split_times=10,
+        output_path='ModelPerformance/DMPNN/cla/Organ')
 
     random_multiple(
         task='Pathway',
         test_path='/home/fuli/my_code/git/tox_data/tox_data_v1/Pathway',
-        pred_path='/home/fuli/my_code/git/chemprop/checkpoints/att/Pathway',
-        split_times=1,
-        output_path='ModelPerformance/att/cla/Pathway')
+        pred_path='/home/fuli/my_code/git/chemprop/checkpoints/DMPNN/Pathway',
+        split_times=10,
+        output_path='ModelPerformance/DMPNN/cla/Pathway')
 
     random_multiple(
         task='Cell',
         test_path='/home/fuli/my_code/git/tox_data/tox_data_v2/multiple_task/Cell',
-        pred_path='/home/fuli/my_code/git/chemprop/checkpoints/att/Cell',
-        split_times=1,
-        output_path='ModelPerformance/att/cla/Cell')
+        pred_path='/home/fuli/my_code/git/chemprop/checkpoints/DMPNN/Cell',
+        split_times=10,
+        output_path='ModelPerformance/DMPNN/cla/Cell')
 
-    random_multiple(
-        task='Drug',
-        test_path='/home/fuli/my_code/git/tox_data/tox_data_v2/multiple_task/Basic',
-        pred_path='/home/fuli/my_code/git/chemprop/checkpoints/att/Drug/cla',
-        split_times=1,
-        output_path='ModelPerformance/att/cla/Drug')
+    # random_multiple(
+    #     task='Basic',
+    #     test_path='/home/fuli/my_code/git/tox_data/tox_data_v2/multiple_task/Basic',
+    #     pred_path='/home/fuli/my_code/git/chemprop/checkpoints/DMPNN/Basic',
+    #     split_times=1,
+    #     output_path='ModelPerformance/DMPNN/Basic')

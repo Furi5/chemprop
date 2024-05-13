@@ -153,28 +153,28 @@ class MoleculeModel(nn.Module):
                 if self.is_atom_bond_targets:
                     if args.shared_atom_bond_ffn:
                         for param in list(self.readout.atom_ffn_base.parameters())[
-                            0 : 2 * args.frzn_ffn_layers
+                            0: 2 * args.frzn_ffn_layers
                         ]:
                             param.requires_grad = False
                         for param in list(self.readout.bond_ffn_base.parameters())[
-                            0 : 2 * args.frzn_ffn_layers
+                            0: 2 * args.frzn_ffn_layers
                         ]:
                             param.requires_grad = False
                     else:
                         for ffn in self.readout.ffn_list:
                             if ffn.constraint:
                                 for param in list(ffn.ffn.parameters())[
-                                    0 : 2 * args.frzn_ffn_layers
+                                    0: 2 * args.frzn_ffn_layers
                                 ]:
                                     param.requires_grad = False
                             else:
                                 for param in list(ffn.ffn_readout.parameters())[
-                                    0 : 2 * args.frzn_ffn_layers
+                                    0: 2 * args.frzn_ffn_layers
                                 ]:
                                     param.requires_grad = False
                 else:
                     for param in list(self.readout.parameters())[
-                        0 : 2 * args.frzn_ffn_layers
+                        0: 2 * args.frzn_ffn_layers
                     ]:  # Freeze weights and bias for given number of layers
                         param.requires_grad = False
 
@@ -230,7 +230,8 @@ class MoleculeModel(nn.Module):
                 )
             )
         else:
-            raise ValueError(f"Unsupported fingerprint type {fingerprint_type}.")
+            raise ValueError(
+                f"Unsupported fingerprint type {fingerprint_type}.")
 
     def forward(
         self,
@@ -273,7 +274,8 @@ class MoleculeModel(nn.Module):
                 bond_descriptors_batch,
                 bond_features_batch,
             )
-            output = self.readout(encodings, constraints_batch, bond_types_batch)
+            output = self.readout(
+                encodings, constraints_batch, bond_types_batch)
         else:
             encodings = self.encoder(
                 batch,
@@ -317,7 +319,8 @@ class MoleculeModel(nn.Module):
                     outputs.append(torch.cat([means, variances], axis=1))
                 return outputs
             else:
-                means, variances = torch.split(output, output.shape[1] // 2, dim=1)
+                means, variances = torch.split(
+                    output, output.shape[1] // 2, dim=1)
                 variances = self.softplus(variances)
                 output = torch.cat([means, variances], axis=1)
         if self.loss_function == "evidential":
@@ -332,7 +335,8 @@ class MoleculeModel(nn.Module):
                         self.softplus(alphas) + 1
                     )  # + min_val # add 1 for numerical contraints of Gamma function
                     betas = self.softplus(betas)  # + min_val
-                    outputs.append(torch.cat([means, lambdas, alphas, betas], dim=1))
+                    outputs.append(
+                        torch.cat([means, lambdas, alphas, betas], dim=1))
                 return outputs
             else:
                 means, lambdas, alphas, betas = torch.split(
