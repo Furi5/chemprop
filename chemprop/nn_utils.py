@@ -282,9 +282,25 @@ def visualize_bond_attention(viz_dir: str,
         plt.close(fig)
 
 
+def attention_tensor_np(
+        smiles: str,
+        attention_weights: torch.FloatTensor):
+    mol = Chem.MolFromSmiles(smiles)
+    num_atoms = mol.GetNumAtoms()
+
+    atomSum_weights = np.zeros(num_atoms)
+    for a in range(num_atoms):
+        a_weights = attention_weights[a].cpu().data.numpy()
+        atomSum_weights += a_weights
+    Amean_weight = atomSum_weights/num_atoms
+
+    nanMean = np.nanmean(Amean_weight)
+    return Amean_weight - nanMean
+
+
 def visualize_atom_attention(viz_dir: str,
                              smiles: str,
-                             attention_weights: torch.FloatTensor):
+                             attention_weights: np.ndarray):
     """
     Saves figures of attention maps between atoms. Note: works on a single molecule, not in batch
 
@@ -294,22 +310,22 @@ def visualize_atom_attention(viz_dir: str,
     :param attention_weights: A num_atoms x num_atoms PyTorch FloatTensor containing attention weights.
     """
     mol = Chem.MolFromSmiles(smiles)
-    num_atoms = mol.GetNumAtoms()
+    # num_atoms = mol.GetNumAtoms()
 
-    # smiles_viz_dir = os.path.join(
-    #     viz_dir, f'{Chem.inchi.MolToInchiKey(mol)}_{num_atoms}')
-    # os.makedirs(smiles_viz_dir, exist_ok=True)
+    # # smiles_viz_dir = os.path.join(
+    # #     viz_dir, f'{Chem.inchi.MolToInchiKey(mol)}_{num_atoms}')
+    # # os.makedirs(smiles_viz_dir, exist_ok=True)
 
-    atomSum_weights = np.zeros(num_atoms)
-    for a in range(num_atoms):
-        a_weights = attention_weights[a].cpu().data.numpy()
-        atomSum_weights += a_weights
-    Amean_weight = atomSum_weights/num_atoms
+    # atomSum_weights = np.zeros(num_atoms)
+    # for a in range(num_atoms):
+    #     a_weights = attention_weights[a].cpu().data.numpy()
+    #     atomSum_weights += a_weights
+    # Amean_weight = atomSum_weights/num_atoms
 
-    nanMean = np.nanmean(Amean_weight)
+    # nanMean = np.nanmean(Amean_weight)
 
     fig = SimilarityMaps.GetSimilarityMapFromWeights(mol,
-                                                     Amean_weight-nanMean,
+                                                     attention_weights,
                                                      colorMap=matplotlib.cm.PiYG)
     # save_path = os.path.join(smiles_viz_dir, f'atom_{a}.png')
     fig.savefig(viz_dir, bbox_inches='tight')

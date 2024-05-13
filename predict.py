@@ -3,7 +3,7 @@ import torch
 import os
 import pandas as pd
 import chemprop
-from chemprop.nn_utils import visualize_atom_attention
+from chemprop.nn_utils import visualize_atom_attention, attention_tensor_np
 from chemprop.Process_runner import ProcessRunner
 
 
@@ -219,7 +219,8 @@ def tox_predict(task,
     arguments = [
         '--test_path', smiles_file,
         '--preds_path', pred_file,
-        '--checkpoint_paths', f'/home/websites/deepToxLab/deepToxLab-backend/api/chemprop_att/checkpoints_att/{task}.pt',
+        # '--checkpoint_paths', f'/home/websites/deepToxLab/deepToxLab-backend/api/chemprop_att/checkpoints_att/{task}.pt',
+        '--checkpoint_paths', f'/home/fuli/my_code/git/chemprop/checkpoints_att/{task}.pt',
         "--num_workers", "0",
         '--uncertainty_method', 'dropout',
         "--no_cuda"
