@@ -295,10 +295,14 @@ def visualize_attention(
 
 if __name__ == '__main__':
     import time
-    smiles_list = ['123', 'CCC', 'CCCC', 'OCC']
+    import pandas as pd
+    # smiles_list = ['123', 'CCC', 'CCCC', 'OCC']
+    smiles_list = ['CC(C)OC(=O)CC(=O)CSC1=C(C=C2CCCC2=N1)C#N']
+    # df = pd.read_csv('test.csv')
+    # smiles_list = df['SMILES'].tolist()
     start = time.time()
-    with suppress_stdout_stderr():  # suppress_stdout_stderr() 用于屏蔽 chemprop 的输出
-        preds_df, attention_df = main(smiles_list)
+    # with suppress_stdout_stderr():  # suppress_stdout_stderr() 用于屏蔽 chemprop 的输出
+    preds_df, attention_df = main(smiles_list)
 
     end = time.time()
     # 以上 3 个分子 23 秒
@@ -307,5 +311,5 @@ if __name__ == '__main__':
     print(attention_df)
 
     svg_str = visualize_attention(
-        smiles_list[1], attention_df.loc[smiles_list[1], 'ADORA2A'])
+        smiles_list[0], attention_df.loc[smiles_list[0], 'hERG_II'])
     print(svg_str)

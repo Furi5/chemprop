@@ -283,10 +283,10 @@ def visualize_bond_attention(viz_dir: str,
 
 
 def attention_tensor_np(
-        smiles: str,
+        num_atoms: int,
         attention_weights: torch.FloatTensor):
-    mol = Chem.MolFromSmiles(smiles)
-    num_atoms = mol.GetNumAtoms()
+    # mol = Chem.MolFromSmiles(smiles)
+    # num_atoms = mol.GetNumAtoms()
 
     atomSum_weights = np.zeros(num_atoms)
     for a in range(num_atoms):
@@ -324,8 +324,9 @@ def visualize_atom_attention(viz_dir: str,
 
     # nanMean = np.nanmean(Amean_weight)
 
-    fig = SimilarityMaps.GetSimilarityMapFromWeights(mol,
-                                                     attention_weights,
+    fig = SimilarityMaps.GetSimilarityMapFromWeights(mol=mol,
+                                                     weights=attention_weights,
+                                                     #  size=(100, 50),
                                                      colorMap=matplotlib.cm.PiYG)
     # save_path = os.path.join(smiles_viz_dir, f'atom_{a}.png')
     fig.savefig(viz_dir, bbox_inches='tight')

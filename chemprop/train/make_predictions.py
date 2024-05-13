@@ -11,7 +11,6 @@ from chemprop.features import set_extra_atom_fdim, set_extra_bond_fdim, set_reac
 from chemprop.models import MoleculeModel
 from chemprop.uncertainty import UncertaintyCalibrator, build_uncertainty_calibrator, UncertaintyEstimator, build_uncertainty_evaluator
 from chemprop.multitask_utils import reshape_values
-from chemprop.nn_utils import attention_tensor_np
 
 
 def load_model(args: PredictArgs, generator: bool = False):
@@ -347,22 +346,6 @@ def predict_and_save(
                 for i, evaluation_method in enumerate(args.evaluation_methods):
                     writer.writerow([evaluation_method] + evaluations[i])
 
-    new_att = []
-    ful_index_list = []
-    for full_index in range(len(full_data)):
-        if full_to_valid_indices.get(full_index, None) is not None:
-            ful_index_list.append(full_index)
-
-    for full_index, data_index in zip(range(len(att[0])), ful_index_list):
-        new_row = []
-        for full_task_index in range(len(att)):
-            att[full_task_index][full_index] = attention_tensor_np(
-                full_data[data_index].smiles[0],
-                att[full_task_index][full_index])
-            new_row.append(att[full_task_index][full_index])
-        new_att.append(new_row)
-    att = new_att
-
     if return_invalid_smiles:
         full_att = []
         full_preds = []
@@ -380,6 +363,7 @@ def predict_and_save(
             full_preds.append(pred)
             full_unc.append(un)
             full_att.append(atts)
+
         return full_preds, full_unc, full_att
     else:
         return preds, unc, att

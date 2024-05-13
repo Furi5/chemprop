@@ -43,6 +43,7 @@ def predict(
         model.apply(activate_dropout_)
 
     preds = []
+    atts = []
 
     # only used if returning uncertainty parameters
     var, lambdas, alphas, betas = [], [], [], []
@@ -114,7 +115,7 @@ def predict(
 
         # Make predictions
         with torch.no_grad():
-            batch_preds, att_mols = model(
+            batch_preds, batch_att_mols = model(
                 mol_batch,
                 features_batch,
                 atom_descriptors_batch,
@@ -210,6 +211,15 @@ def predict(
             # Collect vectors
             batch_preds = batch_preds.tolist()
             preds.extend(batch_preds)
+
+            new_att = []
+            for full_index in range(len(batch_att_mols[0])):
+                new_row = []
+                for full_task_index in range(len(batch_att_mols)):
+                    new_row.append(batch_att_mols[full_task_index][full_index])
+                new_att.append(new_row)
+            atts.extend(new_att)
+
             if model.loss_function == "mve":
                 var.extend(batch_var.tolist())
             elif model.loss_function == "dirichlet":
@@ -218,6 +228,8 @@ def predict(
                 lambdas.extend(batch_lambdas.tolist())
                 alphas.extend(batch_alphas.tolist())
                 betas.extend(batch_betas.tolist())
+
+    assert len(preds) == len(atts)
 
     if model.is_atom_bond_targets:
         preds = [np.concatenate(x) for x in zip(*preds)]
@@ -228,19 +240,19 @@ def predict(
 
     if return_attention_weights and return_unc_parameters:
         if model.loss_function == "mve":
-            return preds, var, att_mols
+            return preds, var, atts
         elif model.loss_function == "dirichlet":
-            return preds, alphas, att_mols
+            return preds, alphas, atts
         elif model.loss_function == "evidential":
-            return preds, lambdas, alphas, betas, att_mols
+            return preds, lambdas, alphas, betas, atts
     elif return_attention_weights:
-        return preds, att_mols
+        return preds, atts
     elif return_unc_parameters:
         if model.loss_function == "mve":
             return preds, var
         elif model.loss_function == "dirichlet":
             return preds, alphas
         elif model.loss_function == "evidential":
-            return preds, lambdas, alphas, betas, att_mols
+            return preds, lambdas, alphas, betas, atts
     else:
         return preds

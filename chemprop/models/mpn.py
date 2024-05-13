@@ -14,6 +14,7 @@ from chemprop.args import TrainArgs
 from chemprop.features import BatchMolGraph, get_atom_fdim, get_bond_fdim, mol2graph
 from chemprop.nn_utils import index_select_ND, get_activation_function
 from chemprop.nn_utils import visualize_atom_attention
+from chemprop.nn_utils import attention_tensor_np
 
 
 class attention_weight(nn.Module):
@@ -254,7 +255,8 @@ class MPNEncoder(nn.Module):
                     cur_hiddens = atom_hiddens.narrow(0, a_start, a_size)
                     if self.attention:
                         mol_vec, att_task = self.attention_list[j](cur_hiddens)
-                        att_mols.append(att_task.data.cpu())
+                        att_mols.append(attention_tensor_np(
+                            a_size, att_task.data.cpu()))
                     else:
                         mol_vec = cur_hiddens  # (num_atoms, hidden_size)
                     if self.aggregation == 'mean':
@@ -273,6 +275,14 @@ class MPNEncoder(nn.Module):
         # (num_tasks, num_molecules, hidden_size)
         mol_vecs_tasks = torch.stack(mol_vecs_tasks, dim=0)
 
+        # new_att = []
+        # for full_index in range(len(att_tasks[0])):
+        #     new_row = []
+        #     for full_task_index in range(len(att_tasks)):
+        #         new_row.append(att_tasks[full_task_index][full_index])
+        #     new_att.append(new_row)
+
+        # assert len(mol_vecs_tasks[0]) == len(new_att)
         return mol_vecs_tasks, att_tasks  # num_molecules x hidden
 
 
