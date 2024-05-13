@@ -4,7 +4,7 @@ from chemprop.train import cross_validate, run_training
 from chemprop.args import TrainArgs, HyperoptArgs
 from chemprop.hyperparameter_optimization import hyperopt
 
-task = 'Drug'
+task = 'Basic'
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--file', help='file iter')
@@ -33,13 +33,12 @@ input_args = parser.parse_args()
 
 # ---------------train-------------#
 train_arguments = [
-    '--data_path', f'/home/fuli/my_code/git/tox_data/tox_data_v1/{task}/cla/{input_args.file}/{task}_train.csv',
-    '--separate_val_path', f'/home/fuli/my_code/git/tox_data/tox_data_v1/{task}/cla/{input_args.file}/{task}_valid.csv',
-    '--separate_test_path', f'/home/fuli/my_code/git/tox_data/tox_data_v1/{task}/cla/{input_args.file}/{task}_test.csv',
-
-    '--config_path', f'checkpoints/DMPNN/{task}/cla/{task}_hyperopt/config.json',
+    '--data_path', f'/home/fl/my_code/Data/multiple_task/{task}/{input_args.file}/train.csv',
+    '--separate_val_path', f'/home/fl/my_code/Data/multiple_task/{task}/{input_args.file}/val.csv',
+    '--separate_test_path', f'/home/fl/my_code/Data/multiple_task/{task}/{input_args.file}/test.csv',
+    '--config_path', f'config/Basic.json',
     '--dataset_type', 'classification',
-    '--save_dir', f'checkpoints/DMPNN/{task}/cla/Drug_{input_args.file}_model',
+    '--save_dir', f'checkpoints/DMPNN/{task}/{task}_{input_args.file}_model',
     '--epochs', '200',
     '--gpu', str(input_args.gpu),
     '--save_smiles_splits',
