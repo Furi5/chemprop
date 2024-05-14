@@ -219,8 +219,8 @@ def tox_predict(task,
     arguments = [
         '--test_path', smiles_file,
         '--preds_path', pred_file,
-        '--checkpoint_paths', f'/home/websites/deepToxLab/deepToxLab-backend/api/chemprop_att/checkpoints_att/{task}.pt',
-        # '--checkpoint_paths', f'/home/fuli/my_code/git/chemprop/checkpoints_att/{task}.pt',
+        # '--checkpoint_paths', f'/home/websites/deepToxLab/deepToxLab-backend/api/chemprop_att/checkpoints_att/{task}.pt',
+        '--checkpoint_paths', f'/home/fuli/my_code/git/chemprop/checkpoints_att/{task}.pt',
         "--num_workers", "0",
         '--uncertainty_method', 'dropout',
         "--no_cuda"
@@ -297,19 +297,19 @@ if __name__ == '__main__':
     import time
     import pandas as pd
     # smiles_list = ['123', 'CCC', 'CCCC', 'OCC']
-    smiles_list = ['CC(C)OC(=O)CC(=O)CSC1=C(C=C2CCCC2=N1)C#N']
-    # df = pd.read_csv('test.csv')
-    # smiles_list = df['SMILES'].tolist()
+    # smiles_list = ['CC(C)OC(=O)CC(=O)CSC1=C(C=C2CCCC2=N1)C#N']
+    df = pd.read_csv('test.csv')
+    smiles_list = df['SMILES'].tolist()
     start = time.time()
     # with suppress_stdout_stderr():  # suppress_stdout_stderr() 用于屏蔽 chemprop 的输出
     preds_df, attention_df = main(smiles_list)
 
     end = time.time()
-    # 以上 3 个分子 23 秒
+    # 以上 3 个分子 23 秒,100个分子 67s，120 核
     print('Time:', end-start)
     print(preds_df)
     print(attention_df)
 
     svg_str = visualize_attention(
         smiles_list[0], attention_df.loc[smiles_list[0], 'hERG_II'])
-    print(svg_str)
+    # print(svg_str)
