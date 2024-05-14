@@ -38,8 +38,8 @@ class attention_weight(nn.Module):
         att_hiddens = self.act_func(self.W_b(att_hiddens))
         # att_hiddens = self.act_func(att_hiddens)
         att_hiddens = self.dropout(att_hiddens)
-        mol_vec = (hiddens + att_hiddens)
-        # mol_vec = att_hiddens
+        # mol_vec = (hiddens + att_hiddens)
+        mol_vec = att_hiddens
         return mol_vec, att_w
 
 
