@@ -24,7 +24,7 @@ class attention_weight(nn.Module):
         self.bias = args.bias
         self.W_a = nn.Linear(
             self.hidden_size, self.hidden_size, bias=self.bias)
-        self.W_b = nn.Linear(self.hidden_size, self.hidden_size)  # 改后，去掉一个线性层
+        # self.W_b = nn.Linear(self.hidden_size, self.hidden_size)  # 改后，去掉一个线性层
         # Dropout
         self.dropout = nn.Dropout(args.dropout)
 
@@ -35,8 +35,8 @@ class attention_weight(nn.Module):
         att_w = torch.matmul(self.W_a(hiddens), hiddens.t())
         att_w = F.softmax(att_w, dim=1)
         att_hiddens = torch.matmul(att_w, hiddens)
-        att_hiddens = self.act_func(self.W_b(att_hiddens))
-        # att_hiddens = self.act_func(att_hiddens)
+        # att_hiddens = self.act_func(self.W_b(att_hiddens))
+        att_hiddens = self.act_func(att_hiddens)
         att_hiddens = self.dropout(att_hiddens)
         # mol_vec = (hiddens + att_hiddens)
         mol_vec = att_hiddens
