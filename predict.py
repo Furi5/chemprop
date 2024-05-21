@@ -5,7 +5,7 @@ import pandas as pd
 import chemprop
 from Process_runner import ProcessRunner
 
-Model_Path = '/home/fuli/my_code/git/chemprop/Model'
+Model_Path = '/home/websites/deepToxLab/chemprop/Model'
 
 uncertainty_threshold = {
     "Nephrotoxicity": 0.0034231929573769,
