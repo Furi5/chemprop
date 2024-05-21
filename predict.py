@@ -5,6 +5,7 @@ import pandas as pd
 import chemprop
 from Process_runner import ProcessRunner
 
+Model_Path = '/home/fuli/my_code/git/chemprop/Model'
 
 uncertainty_threshold = {
     "Nephrotoxicity": 0.0034231929573769,
@@ -374,7 +375,7 @@ def tox_predict(task,
     arguments = [
         '--test_path', smiles_file,
         '--preds_path', pred_file,
-        '--checkpoint_paths', f'/home/fuli/my_code/git/chemprop/checkpoints/DMPNN/{task}/{task}_2_model/fold_0/model_0/model.pt',
+        '--checkpoint_paths', f'{Model_Path}/{task}.pt',
         '--num_workers', '0',
         '--uncertainty_method', 'dropout',
         '--no_cuda'
@@ -442,7 +443,7 @@ if __name__ == '__main__':
     import time
     import pandas as pd
 
-    smiles_list = ["CC(C)OC(=O)CC(=O)CSc1nc2c(cc1C#N)CCC2", "123"]*1000
+    smiles_list = ["CC(C)OC(=O)CC(=O)CSc1nc2c(cc1C#N)CCC2", "123"]
 
     start = time.time()
     with suppress_stdout_stderr():  # suppress_stdout_stderr() 用于屏蔽 chemprop 的输出
