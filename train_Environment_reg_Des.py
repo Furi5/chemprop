@@ -12,26 +12,27 @@ input_args = parser.parse_args()
 
 
 # --------------- Hyperparameter Optimization-------------#
-# hyperparameter_arguments = [
-#     '--data_path', f'/home/fuli/my_code/git/tox_data/tox_data_v2/multiple_task/Environment_reg/{input_args.file}/train.csv',
-#     '--separate_val_path', f'/home/fuli/my_code/git/tox_data/tox_data_v2/multiple_task/Environment_reg/{input_args.file}/val.csv',
-#     '--separate_test_path', f'/home/fuli/my_code/git/tox_data/tox_data_v2/multiple_task/Environment_reg/{input_args.file}/test.csv',
-#     '--features_path', f'/home/fuli/my_code/git/tox_data/tox_data_v2_Des/Environment_reg/{input_args.file}/train_2d.npy',
-#     '--separate_val_features_path', f'/home/fuli/my_code/git/tox_data/tox_data_v2_Des/Environment_reg/{input_args.file}/val_2d.npy',
-#     '--separate_test_features_path', f'/home/fuli/my_code/git/tox_data/tox_data_v2_Des/Environment_reg/{input_args.file}/test_2d.npy',
-#     '--dataset_type', 'regression',
-#     '--hyperopt_checkpoint_dir', f'checkpoints/DMPNN_Des/{task}/{task}_hyperopt',
-#     '--gpu', str(input_args.gpu),
-#     '--batch_size', '128',
-#     '--num_iters', '3',
-#     '--epochs', '300',
-#     '--aggregation', 'norm',
-#     '--search_parameter_keywords', 'depth', 'ffn_num_layers', 'hidden_size', 'ffn_hidden_size', 'dropout',
-#     '--config_save_path', f'checkpoints/DMPNN_Des/{task}/{task}_hyperopt/config.json',
-#     '--log_dir', f'checkpoints/DMPNN_Des/{task}/{task}_hyperopt',
-# ]
-# hy_args = HyperoptArgs().parse_args(hyperparameter_arguments)
-# hyperopt(args=hy_args)
+hyperparameter_arguments = [
+    '--data_path', f'/home/fuli/my_code/git/tox_data/tox_data_v2/multiple_task/Environment_reg/{input_args.file}/train.csv',
+    '--separate_val_path', f'/home/fuli/my_code/git/tox_data/tox_data_v2/multiple_task/Environment_reg/{input_args.file}/val.csv',
+    '--separate_test_path', f'/home/fuli/my_code/git/tox_data/tox_data_v2/multiple_task/Environment_reg/{input_args.file}/test.csv',
+    '--features_path', f'/home/fuli/my_code/git/tox_data/tox_data_v2_Des/Environment_reg/{input_args.file}/train_2d.npy',
+    '--separate_val_features_path', f'/home/fuli/my_code/git/tox_data/tox_data_v2_Des/Environment_reg/{input_args.file}/val_2d.npy',
+    '--separate_test_features_path', f'/home/fuli/my_code/git/tox_data/tox_data_v2_Des/Environment_reg/{input_args.file}/test_2d.npy',
+    '--dataset_type', 'regression',
+    '--hyperopt_checkpoint_dir', f'checkpoints/DMPNN_Des/{task}/{task}_hyperopt',
+    '--gpu', str(input_args.gpu),
+    '--batch_size', '128',
+    '--num_iters', '3',
+    '--epochs', '300',
+    '--aggregation', 'norm',
+    '--loss_function', 'evidential',
+    '--search_parameter_keywords', 'depth', 'ffn_num_layers', 'hidden_size', 'ffn_hidden_size', 'dropout',
+    '--config_save_path', f'checkpoints/DMPNN_Des/{task}/{task}_hyperopt/config.json',
+    '--log_dir', f'checkpoints/DMPNN_Des/{task}/{task}_hyperopt',
+]
+hy_args = HyperoptArgs().parse_args(hyperparameter_arguments)
+hyperopt(args=hy_args)
 
 # ---------------train-------------#
 train_arguments = [
@@ -44,7 +45,8 @@ train_arguments = [
     '--config_path', f'checkpoints/DMPNN_Des/Environment_reg/Environment_reg_hyperopt/config.json',
     '--dataset_type', 'regression',
     '--save_dir', f'checkpoints/DMPNN_Des/{task}/{task}_{input_args.file}_model',
-    '--epochs', '170',
+    '--epochs', '300',
+    '--loss_function', 'evidential',
     '--gpu', str(input_args.gpu),
     '--save_preds',
 ]
