@@ -377,7 +377,7 @@ def tox_predict(task,
         '--checkpoint_paths', f'/home/fuli/my_code/git/chemprop/checkpoints/DMPNN/{task}/{task}_2_model/fold_0/model_0/model.pt',
         '--num_workers', '0',
         '--uncertainty_method', 'dropout',
-        '--no_cuda'
+        # '--no_cuda'
     ]
 
     args = chemprop.args.PredictArgs().parse_args(arguments)
@@ -390,19 +390,19 @@ def tox_predict(task,
         index=smiles_list
     )
 
-    if task not in ['Environment_reg', 'Basic_reg']:
-        uncal = []
-        for un_mol in un:
-            un_mols = []
-            for t, uncertainty in zip(colnames_dict[task], un_mol):
-                un_mols.append(classify_uncertainty(
-                    uncertainty, uncertainty_threshold[t]))
-            uncal.append(un_mols)
-    else:
-        uncal = un
+    # if task not in ['Environment_reg', 'Basic_reg']:
+    #     uncal = []
+    #     for un_mol in un:
+    #         un_mols = []
+    #         for t, uncertainty in zip(colnames_dict[task], un_mol):
+    #             un_mols.append(classify_uncertainty(
+    #                 uncertainty, uncertainty_threshold[t]))
+    #         uncal.append(un_mols)
+    # else:
+    #     uncal = un
 
     sub_uncertainty = pd.DataFrame(
-        uncal,
+        un,
         columns=[col+'_uncertainty' for col in colnames_dict[task]],
         index=smiles_list
     )
@@ -442,12 +442,19 @@ if __name__ == '__main__':
     import time
     import pandas as pd
 
-    smiles_list = ["CC(C)OC(=O)CC(=O)CSc1nc2c(cc1C#N)CCC2", "123"]*1000
+    # smiles_list = ["CC(C)OC(=O)CC(=O)CSc1nc2c(cc1C#N)CCC2", "123"]*1000
 
-    start = time.time()
-    with suppress_stdout_stderr():  # suppress_stdout_stderr() 用于屏蔽 chemprop 的输出
+    # start = time.time()
+    # with suppress_stdout_stderr():  # suppress_stdout_stderr() 用于屏蔽 chemprop 的输出
+    #     preds_df = main(smiles_list)
+
+    # end = time.time()
+    # print('Time:', end-start)
+    # print(preds_df)
+    for task in colnames_dict.keys():
+        df = pd.read_csv(
+            f'/home/fuli/my_code/git/tox_data/Calibration_test_set/{task}.csv')
+        smiles_list = df['smiles'].tolist()
         preds_df = main(smiles_list)
-
-    end = time.time()
-    print('Time:', end-start)
-    print(preds_df)
+        preds_df.to_csv(
+            f'/home/fuli/my_code/git/chemprop/Calibration_set/{task}.csv', index=False)

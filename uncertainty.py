@@ -197,9 +197,10 @@ data_path = '/home/fuli/my_code/git/chemprop/Calibration_set'
 
 
 data_dict = {
-    'task': [],
-    'max_yuden_index': [],
-    'uncar_threshold': []
+    'Group': [],
+    'Dataset': [],
+    'Max Youden’s index': [],
+    'Uncertainty threshold': []
 }
 
 for tasks in colnames_dict.keys():
@@ -242,12 +243,17 @@ for tasks in colnames_dict.keys():
             if Youden_index == max(Youden_index_list):
                 uncar_threshold = sorted_df.iloc[i, :]['uncla']
 
-        data_dict[task] = uncar_threshold
-        # data_dict['max_yuden_index'].append(max(Youden_index_list))
-        # data_dict['uncar_threshold'].append(uncar_threshold)
+        # data_dict[task] = uncar_threshold
+        data_dict['Group'].append(tasks)
+        data_dict['Dataset'].append(task)
+        data_dict['Max Youden’s index'].append(max(Youden_index_list))
+        data_dict['Uncertainty threshold'].append(uncar_threshold)
+
+
+print(data_dict)
 
 output = pd.DataFrame(data_dict)
-# output.to_csv('uncertainty_threshold.csv', index=False)
+output.to_csv('uncertainty_threshold.csv', index=False)
 
-with open('uncertainty_threshold.json', 'w') as json_file:
-    json.dump(data_dict, json_file, indent=4)  # indent=4 使 JSON 文件更具可读性
+# with open('uncertainty_threshold.json', 'w') as json_file:
+#     json.dump(data_dict, json_file, indent=4)  # indent=4 使 JSON 文件更具可读性
