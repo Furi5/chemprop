@@ -7,8 +7,8 @@ from rdkit import Chem
 from rdkit.Chem import rdMolDescriptors
 from Process_runner import ProcessRunner
 
-# Model_Path = '/home/websites/deepToxLab/chemprop/Model'
-Model_Path = '/home/fuli/my_code/git/chemprop/Model'
+Model_Path = '/home/websites/deepToxLab/chemprop/Model'
+# Model_Path = '/home/fuli/my_code/git/chemprop/Model'
 
 uncertainty_threshold = {
     "Nephrotoxicity": 0.0034231929573769,
@@ -428,8 +428,7 @@ def LD50convert(smiles, LD50):
         return 'Invalid SMILES'
     mol = Chem.MolFromSmiles(smiles)
     mw = rdMolDescriptors.CalcExactMolWt(mol)
-    results = round(10**(-LD50)*mw*1000, 3)
-    return "{:.3e}".format(results)
+    return 10**(-LD50)*mw*1000
 
 
 def LOAELconvert(LOAEL):
@@ -438,7 +437,7 @@ def LOAELconvert(LOAEL):
     '''
     if LOAEL == 'Invalid SMILES':
         return 'Invalid SMILES'
-    return round(10**LOAEL, 3)
+    return 10**LOAEL
 
 
 def MRTDconcert(smiles, MRTD):
@@ -449,8 +448,7 @@ def MRTDconcert(smiles, MRTD):
         return 'Invalid SMILES'
     mol = Chem.MolFromSmiles(smiles)
     mw = rdMolDescriptors.CalcExactMolWt(mol)
-    results = 10**(MRTD)*mw*1000
-    return "{:.3e}".format(results)
+    return 10**(MRTD)*mw*1000
 
 
 def main(smiles_list):
