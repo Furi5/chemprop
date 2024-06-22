@@ -3,9 +3,12 @@ import torch
 import os
 import pandas as pd
 import chemprop
+from rdkit import Chem
+from rdkit.Chem import rdMolDescriptors
 from Process_runner import ProcessRunner
 
-Model_Path = '/home/websites/deepToxLab/chemprop/Model'
+# Model_Path = '/home/websites/deepToxLab/chemprop/Model'
+Model_Path = '/home/fuli/my_code/git/chemprop/Model'
 
 uncertainty_threshold = {
     "Nephrotoxicity": 0.0034231929573769,
@@ -206,8 +209,8 @@ colnames_dict = {
     ],
     'Basic_reg': [
         "LOAEL",
-        "ROA_LD50",
-        "MRTD"
+        "MRTD",
+        "ROA_LD50"
     ],
     'Cell': [
         "A549",
@@ -417,6 +420,39 @@ def tox_predict(task,
     return sub_df
 
 
+def LD50convert(smiles, LD50):
+    '''
+    log10(LD50) (mol/kg) convert to mg/kg
+    '''
+    if LD50 == 'Invalid SMILES':
+        return 'Invalid SMILES'
+    mol = Chem.MolFromSmiles(smiles)
+    mw = rdMolDescriptors.CalcExactMolWt(mol)
+    results = round(10**(-LD50)*mw*1000, 3)
+    return "{:.3e}".format(results)
+
+
+def LOAELconvert(LOAEL):
+    '''
+    log10(LOAEL) mg/(kg.bw)/day  convert to mg/(kg.bw)/day
+    '''
+    if LOAEL == 'Invalid SMILES':
+        return 'Invalid SMILES'
+    return round(10**LOAEL, 3)
+
+
+def MRTDconcert(smiles, MRTD):
+    '''
+    log mol/kg-body weight/day   convert to mg/kg-body weight/day 
+    '''
+    if MRTD == 'Invalid SMILES':
+        return 'Invalid SMILES'
+    mol = Chem.MolFromSmiles(smiles)
+    mw = rdMolDescriptors.CalcExactMolWt(mol)
+    results = 10**(MRTD)*mw*1000
+    return "{:.3e}".format(results)
+
+
 def main(smiles_list):
     with ProcessRunner() as P:
         pred_file = 'output.csv'
@@ -436,6 +472,13 @@ def main(smiles_list):
                           "LC50_Mallard_Duck", "LC50_Mallard_Duck_uncertainty"]
         all_preds = all_preds.drop(rows_to_remove, axis=1)
 
+        all_preds['ROA_LD50'] = all_preds.apply(
+            lambda x: LD50convert(x.name, x['ROA_LD50']), axis=1)
+        all_preds['LOAEL'] = all_preds.apply(
+            lambda x: LOAELconvert(x['LOAEL']), axis=1)
+        all_preds['MRTD'] = all_preds.apply(
+            lambda x: MRTDconcert(x.name, x['MRTD']), axis=1)
+
     return all_preds
 
 
@@ -452,3 +495,4 @@ if __name__ == '__main__':
     end = time.time()
     print('Time:', end-start)
     print(preds_df)
+    preds_df.to_csv('output.csv')
