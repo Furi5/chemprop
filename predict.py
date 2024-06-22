@@ -205,8 +205,8 @@ colnames_dict = {
     ],
     'Basic_reg': [
         "LOAEL",
-        "ROA_LD50",
-        "MRTD"
+        "MRTD",
+        "ROA_LD50"
     ],
     'Cell': [
         "A549",

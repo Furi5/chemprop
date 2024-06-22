@@ -23,7 +23,7 @@ hyperparameter_arguments = [
     '--hyperopt_checkpoint_dir', f'checkpoints/DMPNN_Des/{task}/{task}_hyperopt',
     '--gpu', str(input_args.gpu),
     '--batch_size', '128',
-    '--num_iters', '3',
+    '--num_iters', '10',
     '--epochs', '200',
     '--metric', 'auc',
     '--aggregation', 'norm',
