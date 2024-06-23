@@ -1,4 +1,5 @@
 """Loads a trained chemprop model checkpoint and makes predictions on a dataset."""
+from multiprocessing import Pool
 import torch
 import os
 import pandas as pd
@@ -381,7 +382,7 @@ def tox_predict(task,
         '--checkpoint_paths', f'{Model_Path}/{task}.pt',
         '--num_workers', '0',
         '--uncertainty_method', 'dropout',
-        '--no_cuda'
+        # '--no_cuda'
     ]
 
     args = chemprop.args.PredictArgs().parse_args(arguments)
@@ -442,13 +443,44 @@ def LOAELconvert(LOAEL):
 
 def MRTDconcert(smiles, MRTD):
     '''
-    log mol/kg-body weight/day   convert to mg/kg-body weight/day 
+    log mol/kg-body weight/day   convert to mg/kg-body weight/day
     '''
     if MRTD == 'Invalid SMILES':
         return 'Invalid SMILES'
     mol = Chem.MolFromSmiles(smiles)
     mw = rdMolDescriptors.CalcExactMolWt(mol)
     return 10**(MRTD)*mw*1000
+
+
+def BCFconvert(BCF):
+    '''
+    log(BCF)L/kg  convert to L/kg
+    '''
+    if BCF == 'Invalid SMILES':
+        return 'Invalid SMILES'
+    return 10**(BCF)
+
+
+def BCFconvert(BCF):
+    '''
+    log(BCF)L/kg  convert to L/kg
+    '''
+    if BCF == 'Invalid SMILES':
+        return 'Invalid SMILES'
+    return 10**(BCF)
+
+
+def convert_logMolL_to_mgL(smiles, values):
+    '''
+    log(values) (mol/L)  convert to mg/L
+    algae_pEC50, crustaceans_pLC50, fish_pLC50
+    IBC50, LC50DM, LC50FM
+    '''
+    if values == 'Invalid SMILES':
+        return 'Invalid SMILES'
+    mol = Chem.MolFromSmiles(smiles)
+    mw = rdMolDescriptors.CalcExactMolWt(mol)
+    return 10**(values)*mw*1000
 
 
 def main(smiles_list):
@@ -466,6 +498,7 @@ def main(smiles_list):
                                    )
             all_preds = pd.concat([all_preds, preds_df], axis=1)
             all_preds.index.name = 'smiles'
+
         rows_to_remove = ["Honey_bee_toxicity", "Honey_bee_toxicity_uncertainty",
                           "LC50_Mallard_Duck", "LC50_Mallard_Duck_uncertainty"]
         all_preds = all_preds.drop(rows_to_remove, axis=1)
@@ -477,6 +510,21 @@ def main(smiles_list):
         all_preds['MRTD'] = all_preds.apply(
             lambda x: MRTDconcert(x.name, x['MRTD']), axis=1)
 
+        all_preds['BCF'] = all_preds.apply(
+            lambda x: BCFconvert(x['BCF']), axis=1)
+        all_preds['algae_pEC50'] = all_preds.apply(
+            lambda x: convert_logMolL_to_mgL(x.name, x['algae_pEC50']), axis=1)
+        all_preds['crustaceans_pLC50'] = all_preds.apply(
+            lambda x: convert_logMolL_to_mgL(x.name, x['crustaceans_pLC50']), axis=1)
+        all_preds['fish_pLC50'] = all_preds.apply(
+            lambda x: convert_logMolL_to_mgL(x.name, x['fish_pLC50']), axis=1)
+        all_preds['IBC50'] = all_preds.apply(
+            lambda x: convert_logMolL_to_mgL(x.name, x['IBC50']), axis=1)
+        all_preds['LC50DM'] = all_preds.apply(
+            lambda x: convert_logMolL_to_mgL(x.name, x['LC50DM']), axis=1)
+        all_preds['LC50FM'] = all_preds.apply(
+            lambda x: convert_logMolL_to_mgL(x.name, x['LC50FM']), axis=1)
+
     return all_preds
 
 
@@ -484,7 +532,7 @@ if __name__ == '__main__':
     import time
     import pandas as pd
 
-    smiles_list = ["CC(C)OC(=O)CC(=O)CSc1nc2c(cc1C#N)CCC2", "123"]
+    smiles_list = ["CC(C)OC(=O)CC(=O)CSc1nc2c(cc1C#N)CCC2"]
 
     start = time.time()
     with suppress_stdout_stderr():  # suppress_stdout_stderr() 用于屏蔽 chemprop 的输出
