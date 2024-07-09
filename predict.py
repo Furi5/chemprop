@@ -2,14 +2,21 @@
 from multiprocessing import Pool
 import torch
 import os
+import re
 import pandas as pd
 import chemprop
 from rdkit import Chem
 from rdkit.Chem import rdMolDescriptors
 from Process_runner import ProcessRunner
 
-Model_Path = '/home/websites/deepToxLab/chemprop/Model'
-# Model_Path = '/home/fuli/my_code/git/chemprop/Model'
+from rdkit.Chem import AllChem
+from rdkit.Chem.EnumerateStereoisomers import EnumerateStereoisomers
+from rdkit.Chem.EnumerateStereoisomers import StereoEnumerationOptions
+from rdkit.Chem.MolStandardize import rdMolStandardize
+from scopy.ScoPretreat import pretreat
+
+# Model_Path = '/home/websites/deepToxLab/chemprop/Model'
+Model_Path = '/home/fuli/my_code/git/chemprop/Model'
 
 uncertainty_threshold = {
     "Nephrotoxicity": 0.0034231929573769,
@@ -185,10 +192,10 @@ colnames_dict = {
         "FDAMDD",
         "Genotoxicity",
         "Hemolytic_toxicity",
+        "RPMI_8226",
         "Mitochondrial_toxicity",
         "neurotoxicity",
         "ROA",
-        "RPMI_8226",
         "reproductive",
         "Respiratory",
         "TA100",
@@ -382,7 +389,7 @@ def tox_predict(task,
         '--checkpoint_paths', f'{Model_Path}/{task}.pt',
         '--num_workers', '0',
         '--uncertainty_method', 'dropout',
-        # '--no_cuda'
+        '--gpu', '1'
     ]
 
     args = chemprop.args.PredictArgs().parse_args(arguments)
@@ -423,7 +430,7 @@ def tox_predict(task,
 
 def LD50convert(smiles, LD50):
     '''
-    log10(LD50) (mol/kg) convert to mg/kg
+    -log10(LD50) (mol/kg) convert to mg/kg
     '''
     if LD50 == 'Invalid SMILES':
         return 'Invalid SMILES'
@@ -461,15 +468,6 @@ def BCFconvert(BCF):
     return 10**(BCF)
 
 
-def BCFconvert(BCF):
-    '''
-    log(BCF)L/kg  convert to L/kg
-    '''
-    if BCF == 'Invalid SMILES':
-        return 'Invalid SMILES'
-    return 10**(BCF)
-
-
 def convert_logMolL_to_mgL(smiles, values):
     '''
     log(values) (mol/L)  convert to mg/L
@@ -480,7 +478,7 @@ def convert_logMolL_to_mgL(smiles, values):
         return 'Invalid SMILES'
     mol = Chem.MolFromSmiles(smiles)
     mw = rdMolDescriptors.CalcExactMolWt(mol)
-    return 10**(values)*mw*1000
+    return 10**(-values)*mw*1000
 
 
 def main(smiles_list):
@@ -528,17 +526,40 @@ def main(smiles_list):
     return all_preds
 
 
+def prepare_ligand(smiles):
+    try:
+        m = Chem.MolFromSmiles(smiles, sanitize=False)
+        problems = Chem.DetectChemistryProblems(m)
+        if problems:
+            if problems[0].GetType() == 'AtomValenceException':
+                smiles = re.sub(r'NH\d?', 'N', smiles)
+        mol = Chem.MolFromSmiles(smiles)
+        mol = Chem.MolFromSmiles(smiles)
+        s = pretreat.StandardizeMol()
+        mol = s.disconnect_metals(mol)
+        mol = s.largest_fragment(mol)
+        return Chem.MolToSmiles(mol)
+    except:
+        return 'Invalid SMILES'
+
+
 if __name__ == '__main__':
     import time
     import pandas as pd
-
-    smiles_list = ["CC(C)OC(=O)CC(=O)CSc1nc2c(cc1C#N)CCC2"]
-
+    df = pd.read_csv(
+        '/home/fuli/my_code/git/tox_data/validation_set/withdrawal_smiles.csv')
+    # smiles_list = ["CC(C)OC(=O)CC(=O)CSc1nc2c(cc1C#N)CCC2"]
+    smiles_list = df['SMILES'].tolist()
+    smiles_list1 = [prepare_ligand(i)for i in smiles_list]
     start = time.time()
     with suppress_stdout_stderr():  # suppress_stdout_stderr() 用于屏蔽 chemprop 的输出
-        preds_df = main(smiles_list)
-
+        preds_df = main(smiles_list1)
+    df_reset = df.reset_index(drop=True)
+    preds_df['smiles'] = smiles_list
+    preds_df_reset = preds_df.reset_index(drop=True)
+    df1 = pd.concat([df_reset, preds_df_reset], axis=1)
     end = time.time()
     print('Time:', end-start)
     print(preds_df)
-    preds_df.to_csv('output.csv')
+    df1.to_csv(
+        '/home/fuli/my_code/git/tox_data/validation_set/withdrawal_pred.csv', index=False)
