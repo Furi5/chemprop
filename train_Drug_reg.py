@@ -38,13 +38,14 @@ train_arguments = [
     '--data_path', f'/home/fuli/my_code/git/tox_data/tox_data_v2/multiple_task/Basic_reg/{input_args.file}/train.csv',
     '--separate_val_path', f'/home/fuli/my_code/git/tox_data/tox_data_v2/multiple_task/Basic_reg/{input_args.file}/val.csv',
     '--separate_test_path', f'/home/fuli/my_code/git/tox_data/tox_data_v2/multiple_task/Basic_reg/{input_args.file}/test.csv',
-    '--config_path', f'checkpoints/DMPNN/{task}/config.json',
+    '--config_path', f'checkpoints/config/Basic_reg.json',
     '--dataset_type', 'regression',
     '--save_dir', f'checkpoints/DMPNN/{task}/{task}_{input_args.file}_model',
-    '--epochs', '500',
+    '--epochs', '300',
     '--num_workers', '8',
     '--gpu', str(input_args.gpu),
-    '--save_smiles_splits',
+    '--extra_metrics', 'r2',
+    '--show_individual_scores',
     '--save_preds',
 ]
 

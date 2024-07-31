@@ -1,3 +1,4 @@
+import os
 import pandas as pd
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import confusion_matrix
@@ -14,10 +15,10 @@ drug_order = [
     "FDAMDD",
     "Genotoxicity",
     "Hemolytic",
+    "Immune",
     "Mitochondrial",
     "Neurotoxicity",
     "ROA",
-    "RPMI_8226",
     "Reproductive",
     "Respiratory",
     "TA100",
@@ -35,7 +36,7 @@ drug_order = [
     "TA97",
     "TA97_S9",
     "TA98",
-    "TA98_S9",
+    "TA98_S9"
 ]
 
 
@@ -151,56 +152,56 @@ def random_multiple(task, test_path, pred_path, split_times, output_path):
             df['task'], categories=drug_order, ordered=True)
 
     mean_sd = group_df(df)
-    mean_sd.to_csv(f'{output_path}_10_mean_sd.csv')
-    df.to_csv(f'{output_path}_10.csv', index=False)
+    mean_sd.to_csv(f'{output_path}/{task}_10_mean_sd.csv')
+    df.to_csv(f'{output_path}/{task}_10.csv', index=False)
 
 
 if __name__ == '__main__':
     random_multiple(
         task='Target',
         test_path='/home/fuli/my_code/git/tox_data/tox_data_v1/Target',
-        pred_path='/home/fuli/my_code/git/chemprop/checkpoints/DMPNN/Target',
+        pred_path='/home/fuli/my_code/git/chemprop/checkpoints/DMPNN_Des/Target',
         split_times=10,
-        output_path='ModelPerformance/DMPNN/cla/Target')
+        output_path='ModelPerformance/DMPNN_Des/cla')
 
     random_multiple(
         task='Clinical',
         test_path='/home/fuli/my_code/git/tox_data/tox_data_v1/Clinical',
-        pred_path='/home/fuli/my_code/git/chemprop/checkpoints/DMPNN/Clinical',
+        pred_path='/home/fuli/my_code/git/chemprop/checkpoints/DMPNN_Des/Clinical',
         split_times=10,
-        output_path='ModelPerformance/DMPNN/cla/Clinical')
+        output_path='ModelPerformance/DMPNN_Des/cla')
 
     random_multiple(
         task='Environments',
         test_path='/home/fuli/my_code/git/tox_data/tox_data_v1/Environments/cla',
-        pred_path='/home/fuli/my_code/git/chemprop/checkpoints/DMPNN/Environments',
+        pred_path='/home/fuli/my_code/git/chemprop/checkpoints/DMPNN_Des/Environments',
         split_times=10,
-        output_path='ModelPerformance/DMPNN/cla/Environments')
+        output_path='ModelPerformance/DMPNN_Des/cla')
 
     random_multiple(
         task='Organ',
         test_path='/home/fuli/my_code/git/tox_data/tox_data_v1/Organ',
-        pred_path='/home/fuli/my_code/git/chemprop/checkpoints/DMPNN/Organ',
+        pred_path='/home/fuli/my_code/git/chemprop/checkpoints/DMPNN_Des/Organ',
         split_times=10,
-        output_path='ModelPerformance/DMPNN/cla/Organ')
+        output_path='ModelPerformance/DMPNN_Des/cla')
 
     random_multiple(
         task='Pathway',
         test_path='/home/fuli/my_code/git/tox_data/tox_data_v1/Pathway',
-        pred_path='/home/fuli/my_code/git/chemprop/checkpoints/DMPNN/Pathway',
+        pred_path='/home/fuli/my_code/git/chemprop/checkpoints/DMPNN_Des/Pathway',
         split_times=10,
-        output_path='ModelPerformance/DMPNN/cla/Pathway')
+        output_path='ModelPerformance/DMPNN_Des/cla')
 
     random_multiple(
         task='Cell',
         test_path='/home/fuli/my_code/git/tox_data/tox_data_v2/multiple_task/Cell',
-        pred_path='/home/fuli/my_code/git/chemprop/checkpoints/DMPNN/Cell',
+        pred_path='/home/fuli/my_code/git/chemprop/checkpoints/DMPNN_Des/Cell',
         split_times=10,
-        output_path='ModelPerformance/DMPNN/cla/Cell')
+        output_path='ModelPerformance/DMPNN_Des/cla')
 
-    # random_multiple(
-    #     task='Basic',
-    #     test_path='/home/fuli/my_code/git/tox_data/tox_data_v2/multiple_task/Basic',
-    #     pred_path='/home/fuli/my_code/git/chemprop/checkpoints/DMPNN/Basic',
-    #     split_times=1,
-    #     output_path='ModelPerformance/DMPNN/Basic')
+    random_multiple(
+        task='Basic',
+        test_path='/home/fuli/my_code/git/tox_data/tox_data_v2/multiple_task/Basic',
+        pred_path='/home/fuli/my_code/git/chemprop/checkpoints/DMPNN_Des/Basic',
+        split_times=10,
+        output_path='ModelPerformance/DMPNN_Des/cla')

@@ -74,7 +74,7 @@ if __name__ == '__main__':
         task='Environment_reg',
         test_path='/home/fuli/my_code/git/tox_data/tox_data_v2/multiple_task/Environment_reg',
         pred_path='/home/fuli/my_code/git/chemprop/checkpoints/DMPNN_Des/Environment_reg',
-        split_times=10,
+        split_times=9,
         output_path='ModelPerformance/DMPNN_Des/reg/Environment_reg')
 
     random_multiple(
