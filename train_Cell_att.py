@@ -31,7 +31,7 @@ gpu = 0
 # ---------------train-------------#
 parser = argparse.ArgumentParser()
 parser.add_argument('--file', help='file iter', default=1)
-parser.add_argument('--gpu', help='gpu id', default=0)
+parser.add_argument('--gpu', help='gpu id', default=1)
 input_args = parser.parse_args()
 
 train_arguments = [
@@ -41,7 +41,7 @@ train_arguments = [
     '--config_path', f'/home/fuli/my_code/git/chemprop/checkpoints/DMPNN/{task}/{task}_hyperopt/config.json',
     '--dataset_type', 'classification',
     '--save_dir', f'checkpoints/att/{task}/{task}_{input_args.file}_model',
-    '--epochs', '1',
+    '--epochs', '60',
     '--batch_size', '256',
     '--num_workers', '0',
     '--gpu', str(input_args.gpu),

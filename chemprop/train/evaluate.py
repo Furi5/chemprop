@@ -41,7 +41,7 @@ def evaluate_predictions(preds: List[List[float]],
 
     if len(preds) == 0:
         return {metric: [float('nan')] * num_tasks for metric in metrics}
-    
+
     if is_atom_bond_targets:
         targets = [np.concatenate(x).reshape([-1, 1]) for x in zip(*targets)]
 
@@ -81,14 +81,17 @@ def evaluate_predictions(preds: List[List[float]],
         for metric, metric_func in metric_to_func.items():
             if metric == 'quantile':
                 if not quantiles:
-                    raise ValueError("quantile metric evaluation requires quantiles parameter")
+                    raise ValueError(
+                        "quantile metric evaluation requires quantiles parameter")
                 for i, (valid_target, valid_pred) in enumerate(zip(valid_targets, valid_preds)):
                     valid_target = np.concatenate(valid_target)
                     valid_pred = np.concatenate(valid_pred)
-                    results[metric].append(metric_func(valid_target, valid_pred, quantiles[i]))
+                    results[metric].append(metric_func(
+                        valid_target, valid_pred, quantiles[i]))
             else:
                 for valid_target, valid_pred in zip(valid_targets, valid_preds):
-                    results[metric].append(metric_func(valid_target, valid_pred))
+                    results[metric].append(
+                        metric_func(valid_target, valid_pred))
     else:
         for i in range(num_tasks):
             # # Skip if all targets or preds are identical, otherwise we'll crash during classification
@@ -112,15 +115,19 @@ def evaluate_predictions(preds: List[List[float]],
             for metric, metric_func in metric_to_func.items():
                 if dataset_type == 'multiclass' and metric == 'cross_entropy':
                     results[metric].append(metric_func(valid_targets[i], valid_preds[i],
-                                                    labels=list(range(len(valid_preds[i][0])))))
+                                                       labels=list(range(len(valid_preds[i][0])))))
                 elif metric in ['bounded_rmse', 'bounded_mse', 'bounded_mae']:
-                    results[metric].append(metric_func(valid_targets[i], valid_preds[i], valid_gt_targets[i], valid_lt_targets[i]))
+                    results[metric].append(metric_func(
+                        valid_targets[i], valid_preds[i], valid_gt_targets[i], valid_lt_targets[i]))
                 elif metric == 'quantile':
                     if not quantiles:
-                        raise ValueError("quantile metric evaluation requires quantiles parameter")
-                    results[metric].append(metric_func(valid_targets[i], valid_preds[i], quantiles[i]))
+                        raise ValueError(
+                            "quantile metric evaluation requires quantiles parameter")
+                    results[metric].append(metric_func(
+                        valid_targets[i], valid_preds[i], quantiles[i]))
                 else:
-                    results[metric].append(metric_func(valid_targets[i], valid_preds[i]))
+                    results[metric].append(metric_func(
+                        valid_targets[i], valid_preds[i]))
 
     results = dict(results)
 
@@ -159,7 +166,7 @@ def evaluate(model: MoleculeModel,
         gt_targets = None
         lt_targets = None
 
-    preds = predict(
+    preds, atts = predict(
         model=model,
         data_loader=data_loader,
         scaler=scaler,

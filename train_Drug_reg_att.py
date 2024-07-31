@@ -35,16 +35,15 @@ parser.add_argument('--gpu', help='gpu id', default=0)
 input_args = parser.parse_args()
 
 train_arguments = [
-    '--data_path', f'/home/fuli/my_code/git/tox_data/tox_data_v2/multiple_task/Basic_reg/train.csv',
-    '--separate_val_path', f'/home/fuli/my_code/git/tox_data/tox_data_v2/multiple_task/Basic_reg/valid.csv',
-    '--separate_test_path', f'/home/fuli/my_code/git/tox_data/tox_data_v2/multiple_task/Basic_reg/test.csv',
-    '--config_path', f'/home/fuli/my_code/git/chemprop/checkpoints/{task}/reg/{task}_hyperopt/config.json',
+    '--data_path', f'/home/fuli/my_code/git/tox_data/tox_data_v2/multiple_task/Basic_reg/{input_args.file}/train.csv',
+    '--separate_val_path', f'/home/fuli/my_code/git/tox_data/tox_data_v2/multiple_task/Basic_reg/{input_args.file}/val.csv',
+    '--separate_test_path', f'/home/fuli/my_code/git/tox_data/tox_data_v2/multiple_task/Basic_reg/{input_args.file}/test.csv',
+    '--config_path', f'checkpoints/config/Basic_reg.json',
     '--dataset_type', 'regression',
-    '--save_dir', f'checkpoints/att/{task}/reg/{task}_{input_args.file}_model',
-    '--epochs', '1',
+    '--save_dir', f'checkpoints/att/{task}_reg/{task}_{input_args.file}_model',
+    '--epochs', '100',
     '--num_workers', '8',
     '--gpu', str(input_args.gpu),
-    '--save_smiles_splits',
     '--save_preds',
 ]
 

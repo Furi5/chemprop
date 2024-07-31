@@ -219,11 +219,12 @@ def tox_predict(task,
     arguments = [
         '--test_path', smiles_file,
         '--preds_path', pred_file,
-        # '--checkpoint_paths', f'/home/websites/deepToxLab/deepToxLab-backend/api/chemprop_att/checkpoints_att/{task}.pt',
-        '--checkpoint_paths', f'/home/fuli/my_code/git/chemprop/checkpoints_att/{task}.pt',
+        '--checkpoint_paths', f'/home/fuli/my_code/git/2/checkpoints_att/Organ/test_2_Organ_1_model/fold_0/model_0/model.pt',
+        # '--checkpoint_paths', f'/home/fuli/my_code/git/chemprop/checkpoints_att/{task}.pt',
+        # '--calibration_method', 'conformal_quantile_regression',
         "--num_workers", "0",
         '--uncertainty_method', 'dropout',
-        "--no_cuda"
+        # "--no_cuda"
     ]
 
     args = chemprop.args.PredictArgs().parse_args(arguments)
@@ -265,7 +266,8 @@ def main(smiles_list):
         smi_df.to_csv(smiles_file, index=False)
         all_preds = pd.DataFrame()
         all_attention = pd.DataFrame()
-        for task in colnames_dict.keys():
+        # for task in colnames_dict.keys():
+        for task in ['organ']:
             preds_df, attention_df = tox_predict(task,
                                                  smiles_file,
                                                  pred_file,
@@ -274,21 +276,22 @@ def main(smiles_list):
             all_preds = pd.concat([all_preds, preds_df], axis=1)
             all_attention = pd.concat([all_attention, attention_df], axis=1)
         all_preds.index.name = 'smiles'
-    rows_to_remove = ["Honey_bee_toxicity", "Honey_bee_toxicity_uncertainty",
-                      "LC50_Mallard_Duck", "LC50_Mallard_Duck_uncertainty"]
-    all_preds = all_preds.drop(rows_to_remove, axis=1)
-    all_attention = all_attention.drop(
-        ["Honey_bee_toxicity", "LC50_Mallard_Duck"], axis=1)
+    # rows_to_remove = ["Honey_bee_toxicity", "Honey_bee_toxicity_uncertainty",
+    #                   "LC50_Mallard_Duck", "LC50_Mallard_Duck_uncertainty"]
+    # all_preds = all_preds.drop(rows_to_remove, axis=1)
+    # all_attention = all_attention.drop(
+    #     ["Honey_bee_toxicity", "LC50_Mallard_Duck"], axis=1)
     return all_preds, all_attention
 
 
 def visualize_attention(
     smiles: str,
+    task_name: str,
     atom_weights: torch.FloatTensor,
 ):
     vir_dir = 'vir.svg'
     with ProcessRunner() as P:
-        visualize_atom_attention(vir_dir, smiles, atom_weights)
+        visualize_atom_attention(vir_dir, smiles, task_name, atom_weights, )
         with open(vir_dir, 'r') as f:
             return f.read()
 
@@ -297,19 +300,25 @@ if __name__ == '__main__':
     import time
     import pandas as pd
     # smiles_list = ['123', 'CCC', 'CCCC', 'OCC']
-    # smiles_list = ['CC(C)OC(=O)CC(=O)CSC1=C(C=C2CCCC2=N1)C#N']
-    df = pd.read_csv('test.csv')
-    smiles_list = df['SMILES'].tolist()
-    start = time.time()
+    smiles_list = [
+        # 'CC(C)OC(=O)CC(=O)CSc1nc2c(cc1C#N)CCC2'
+        # 'O=C(/C=C(\CO)OC1OC(COS(=O)(=O)O)C(OC2OC(C(=O)OCc3ccccc3)C(OC3OC(COS(=O)(=O)O)C(OC4OC(C(=O)OCc5ccccc5)C(OC5OC(COS(=O)(=O)O)C(O)C(O)C5NS(=O)(=O)O)C(O)C4OS(=O)(=O)O)C(O)C3NS(=O)(=O)O)C(O)C2OS(=O)(=O)O)C(O)C1NS(=O)(=O)O)OCc1ccccc1'
+        'Fc1ccccc1'
+    ]
+    # df = pd.read_csv('test.csv')
+    # smiles_list = df['SMILES'].tolist()
+
     # with suppress_stdout_stderr():  # suppress_stdout_stderr() 用于屏蔽 chemprop 的输出
     preds_df, attention_df = main(smiles_list)
 
-    end = time.time()
     # 以上 3 个分子 23 秒,100个分子 67s，120 核
+    start = time.time()
+    svg_str = visualize_atom_attention(
+        smiles_list[0], 'Cav12', attention_df.loc[smiles_list[0], 'Cav12'])
+    with open('123.png', 'wb') as f:
+        f.write(svg_str)
+    end = time.time()
     print('Time:', end-start)
-    print(preds_df)
-    print(attention_df)
-
-    svg_str = visualize_attention(
-        smiles_list[0], attention_df.loc[smiles_list[0], 'hERG_II'])
+    # print(preds_df)
+    # print(attention_df)
     # print(svg_str)

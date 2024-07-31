@@ -36,12 +36,11 @@ train_arguments = [
     '--data_path', f'/home/fuli/my_code/git/tox_data/tox_data_v2/multiple_task/Basic/{input_args.file}/train.csv',
     '--separate_val_path', f'/home/fuli/my_code/git/tox_data/tox_data_v2/multiple_task/Basic/{input_args.file}/val.csv',
     '--separate_test_path', f'/home/fuli/my_code/git/tox_data/tox_data_v2/multiple_task/Basic/{input_args.file}/test.csv',
-    '--config_path', f'checkpoints/DMPNN/{task}/cla/{task}_hyperopt/config.json',
+    '--config_path', f'checkpoints/config/Basic.json',
     '--dataset_type', 'classification',
-    '--save_dir', f'checkpoints/att/{task}/cla/{task}_{input_args.file}_model',
-    '--epochs', '30',
+    '--save_dir', f'checkpoints/att/{task}/{task}_{input_args.file}_model',
+    '--epochs', '60',
     '--gpu', str(input_args.gpu),
-    '--save_smiles_splits',
     '--save_preds',
 ]
 

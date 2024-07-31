@@ -114,7 +114,8 @@ class MoleculeDatapoint:
         self.is_reaction_list = [is_reaction(x) for x in self.is_mol_list]
         self.is_explicit_h_list = [is_explicit_h(x) for x in self.is_mol_list]
         self.is_adding_hs_list = [is_adding_hs(x) for x in self.is_mol_list]
-        self.is_keeping_atom_map_list = [is_keeping_atom_map(x) for x in self.is_mol_list]
+        self.is_keeping_atom_map_list = [
+            is_keeping_atom_map(x) for x in self.is_mol_list]
 
         if data_weight is not None:
             self.data_weight = data_weight
@@ -139,36 +140,42 @@ class MoleculeDatapoint:
                         # for H2
                         elif m is not None and m.GetNumHeavyAtoms() == 0:
                             # not all features are equally long, so use methane as dummy molecule to determine length
-                            self.features.extend(np.zeros(len(features_generator(Chem.MolFromSmiles('C')))))
+                            self.features.extend(
+                                np.zeros(len(features_generator(Chem.MolFromSmiles('C')))))
                     else:
                         if m[0] is not None and m[1] is not None and m[0].GetNumHeavyAtoms() > 0:
                             self.features.extend(features_generator(m[0]))
                         elif m[0] is not None and m[1] is not None and m[0].GetNumHeavyAtoms() == 0:
-                            self.features.extend(np.zeros(len(features_generator(Chem.MolFromSmiles('C')))))   
-                    
+                            self.features.extend(
+                                np.zeros(len(features_generator(Chem.MolFromSmiles('C')))))
 
             self.features = np.array(self.features)
 
         # Fix nans in features
         replace_token = 0
         if self.features is not None:
-            self.features = np.where(np.isnan(self.features), replace_token, self.features)
+            self.features = np.where(
+                np.isnan(self.features), replace_token, self.features)
 
         # Fix nans in atom_descriptors
         if self.atom_descriptors is not None:
-            self.atom_descriptors = np.where(np.isnan(self.atom_descriptors), replace_token, self.atom_descriptors)
+            self.atom_descriptors = np.where(
+                np.isnan(self.atom_descriptors), replace_token, self.atom_descriptors)
 
         # Fix nans in atom_features
         if self.atom_features is not None:
-            self.atom_features = np.where(np.isnan(self.atom_features), replace_token, self.atom_features)
+            self.atom_features = np.where(
+                np.isnan(self.atom_features), replace_token, self.atom_features)
 
         # Fix nans in bond_descriptors
         if self.bond_descriptors is not None:
-            self.bond_descriptors = np.where(np.isnan(self.bond_descriptors), replace_token, self.bond_descriptors)
+            self.bond_descriptors = np.where(
+                np.isnan(self.bond_descriptors), replace_token, self.bond_descriptors)
 
         # Fix nans in bond_features
         if self.bond_features is not None:
-            self.bond_features = np.where(np.isnan(self.bond_features), replace_token, self.bond_features)
+            self.bond_features = np.where(
+                np.isnan(self.bond_features), replace_token, self.bond_features)
 
         # Save a copy of the raw features and targets to enable different scaling later on
         self.raw_features, self.raw_targets, self.raw_atom_targets, self.raw_bond_targets = \
@@ -235,6 +242,7 @@ class MoleculeDatapoint:
         :return: A list of bond types for each molecule.
         """
         return [[b.GetBondTypeAsDouble() for b in self.mol[i].GetBonds()] for i in range(self.number_of_molecules)]
+
     @property
     def max_molwt(self) -> float:
         """
@@ -290,7 +298,8 @@ class MoleculeDatapoint:
 
         :param features: A 1D numpy array of extra features for the molecule.
         """
-        self.features = np.append(self.features, features) if self.features is not None else features
+        self.features = np.append(
+            self.features, features) if self.features is not None else features
 
     def num_tasks(self) -> int:
         """
@@ -434,7 +443,8 @@ class MoleculeDataset(Dataset):
                     mol_graphs_list.append(mol_graph)
                 mol_graphs.append(mol_graphs_list)
 
-            self._batch_graph = [BatchMolGraph([g[i] for g in mol_graphs]) for i in range(len(mol_graphs[0]))]
+            self._batch_graph = [BatchMolGraph(
+                [g[i] for g in mol_graphs]) for i in range(len(mol_graphs[0]))]
 
         return self._batch_graph
 
@@ -514,9 +524,11 @@ class MoleculeDataset(Dataset):
         """
         constraints = []
         for d in self._data:
-            if d.constraints is None :
-                natom_targets = len(d.atom_targets) if d.atom_targets is not None else 0
-                nbond_targets = len(d.bond_targets) if d.bond_targets is not None else 0
+            if d.constraints is None:
+                natom_targets = len(
+                    d.atom_targets) if d.atom_targets is not None else 0
+                nbond_targets = len(
+                    d.bond_targets) if d.bond_targets is not None else 0
                 ntargets = natom_targets + nbond_targets
                 constraints.append([None] * ntargets)
             else:
@@ -541,7 +553,7 @@ class MoleculeDataset(Dataset):
         atom_bond_data_weights = [[] for _ in targets[0]]
         for i, tb in enumerate(targets):
             weight = data_weights[i]
-            for j, x in enumerate(tb): 
+            for j, x in enumerate(tb):
                 atom_bond_data_weights[j] += [1. * weight] * len(x)
 
         return atom_bond_data_weights
@@ -553,7 +565,7 @@ class MoleculeDataset(Dataset):
         :return: A list of lists of floats (or None) containing the targets.
         """
         return [d.targets for d in self._data]
-    
+
     def mask(self) -> List[List[bool]]:
         """
         Returns whether the targets associated with each molecule and task are present.
@@ -574,7 +586,7 @@ class MoleculeDataset(Dataset):
     def gt_targets(self) -> List[np.ndarray]:
         """
         Returns indications of whether the targets associated with each molecule are greater-than inequalities.
-        
+
         :return: A list of lists of booleans indicating whether the targets in those positions are greater-than inequality targets.
         """
         if not hasattr(self._data[0], 'gt_targets'):
@@ -585,7 +597,7 @@ class MoleculeDataset(Dataset):
     def lt_targets(self) -> List[np.ndarray]:
         """
         Returns indications of whether the targets associated with each molecule are less-than inequalities.
-        
+
         :return: A list of lists of booleans indicating whether the targets in those positions are less-than inequality targets.
         """
         if not hasattr(self._data[0], 'lt_targets'):
@@ -673,11 +685,13 @@ class MoleculeDataset(Dataset):
 
         if scaler is None:
             if scale_atom_descriptors and not self._data[0].atom_descriptors is None:
-                features = np.vstack([d.raw_atom_descriptors for d in self._data])
+                features = np.vstack(
+                    [d.raw_atom_descriptors for d in self._data])
             elif scale_atom_descriptors and not self._data[0].atom_features is None:
                 features = np.vstack([d.raw_atom_features for d in self._data])
             elif scale_bond_descriptors and not self._data[0].bond_descriptors is None:
-                features = np.vstack([d.raw_bond_descriptors for d in self._data])
+                features = np.vstack(
+                    [d.raw_bond_descriptors for d in self._data])
             elif scale_bond_descriptors and not self._data[0].bond_features is None:
                 features = np.vstack([d.raw_bond_features for d in self._data])
             else:
@@ -687,19 +701,22 @@ class MoleculeDataset(Dataset):
 
         if scale_atom_descriptors and not self._data[0].atom_descriptors is None:
             for d in self._data:
-                d.set_atom_descriptors(scaler.transform(d.raw_atom_descriptors))
+                d.set_atom_descriptors(
+                    scaler.transform(d.raw_atom_descriptors))
         elif scale_atom_descriptors and not self._data[0].atom_features is None:
             for d in self._data:
                 d.set_atom_features(scaler.transform(d.raw_atom_features))
         elif scale_bond_descriptors and not self._data[0].bond_descriptors is None:
             for d in self._data:
-                d.set_bond_descriptors(scaler.transform(d.raw_bond_descriptors))
+                d.set_bond_descriptors(
+                    scaler.transform(d.raw_bond_descriptors))
         elif scale_bond_descriptors and not self._data[0].bond_features is None:
             for d in self._data:
                 d.set_bond_features(scaler.transform(d.raw_bond_features))
         else:
             for d in self._data:
-                d.set_features(scaler.transform(d.raw_features.reshape(1, -1))[0])
+                d.set_features(scaler.transform(
+                    d.raw_features.reshape(1, -1))[0])
 
         return scaler
 
@@ -743,9 +760,11 @@ class MoleculeDataset(Dataset):
         ).fit(targets)
         scaled_targets = scaler.transform(targets)
         for i in range(n_atom_targets):
-            scaled_targets[i] = np.split(np.array(scaled_targets[i]).flatten(), np.cumsum(np.array(n_atoms)))[:-1]
+            scaled_targets[i] = np.split(
+                np.array(scaled_targets[i]).flatten(), np.cumsum(np.array(n_atoms)))[:-1]
         for i in range(n_bond_targets):
-            scaled_targets[i+n_atom_targets] = np.split(np.array(scaled_targets[i+n_atom_targets]).flatten(), np.cumsum(np.array(n_bonds)))[:-1]
+            scaled_targets[i+n_atom_targets] = np.split(np.array(
+                scaled_targets[i+n_atom_targets]).flatten(), np.cumsum(np.array(n_bonds)))[:-1]
         scaled_targets = np.array(scaled_targets, dtype=object).T
         self.set_targets(scaled_targets)
 
@@ -815,12 +834,14 @@ class MoleculeSampler(Sampler):
 
         if self.class_balance:
             indices = np.arange(len(dataset))
-            has_active = np.array([any(target == 1 for target in datapoint.targets) for datapoint in dataset])
+            has_active = np.array(
+                [any(target == 1 for target in datapoint.targets) for datapoint in dataset])
 
             self.positive_indices = indices[has_active].tolist()
             self.negative_indices = indices[~has_active].tolist()
 
-            self.length = 2 * min(len(self.positive_indices), len(self.negative_indices))
+            self.length = 2 * min(len(self.positive_indices),
+                                  len(self.negative_indices))
         else:
             self.positive_indices = self.negative_indices = None
 
@@ -833,7 +854,8 @@ class MoleculeSampler(Sampler):
                 self._random.shuffle(self.positive_indices)
                 self._random.shuffle(self.negative_indices)
 
-            indices = [index for pair in zip(self.positive_indices, self.negative_indices) for index in pair]
+            indices = [index for pair in zip(
+                self.positive_indices, self.negative_indices) for index in pair]
         else:
             indices = list(range(len(self.dataset)))
 
@@ -922,7 +944,8 @@ class MoleculeDataLoader(DataLoader):
         :return: A list of lists of floats (or None) containing the targets.
         """
         if self._class_balance or self._shuffle:
-            raise ValueError('Cannot safely extract targets when class balance or shuffle are enabled.')
+            raise ValueError(
+                'Cannot safely extract targets when class balance or shuffle are enabled.')
 
         return [self._dataset[index].targets for index in self._sampler]
 
@@ -934,9 +957,10 @@ class MoleculeDataLoader(DataLoader):
         :return: A list of lists of booleans (or None) containing the targets.
         """
         if self._class_balance or self._shuffle:
-            raise ValueError('Cannot safely extract targets when class balance or shuffle are enabled.')
-        
-        if not hasattr(self._dataset[0],'gt_targets'):
+            raise ValueError(
+                'Cannot safely extract targets when class balance or shuffle are enabled.')
+
+        if not hasattr(self._dataset[0], 'gt_targets'):
             return None
 
         return [self._dataset[index].gt_targets for index in self._sampler]
@@ -949,13 +973,13 @@ class MoleculeDataLoader(DataLoader):
         :return: A list of lists of booleans (or None) containing the targets.
         """
         if self._class_balance or self._shuffle:
-            raise ValueError('Cannot safely extract targets when class balance or shuffle are enabled.')
+            raise ValueError(
+                'Cannot safely extract targets when class balance or shuffle are enabled.')
 
-        if not hasattr(self._dataset[0],'lt_targets'):
+        if not hasattr(self._dataset[0], 'lt_targets'):
             return None
 
         return [self._dataset[index].lt_targets for index in self._sampler]
-
 
     @property
     def iter_size(self) -> int:
@@ -966,7 +990,7 @@ class MoleculeDataLoader(DataLoader):
         r"""Creates an iterator which returns :class:`MoleculeDataset`\ s"""
         return super(MoleculeDataLoader, self).__iter__()
 
-    
+
 def make_mols(smiles: List[str], reaction_list: List[bool], keep_h_list: List[bool], add_h_list: List[bool], keep_atom_map_list: List[bool]):
     """
     Builds a list of RDKit molecules (or a list of tuples of molecules if reaction is True) for a list of smiles.
@@ -981,8 +1005,9 @@ def make_mols(smiles: List[str], reaction_list: List[bool], keep_h_list: List[bo
     mol = []
     for s, reaction, keep_h, add_h, keep_atom_map in zip(smiles, reaction_list, keep_h_list, add_h_list, keep_atom_map_list):
         if reaction:
-            mol.append(SMILES_TO_MOL[s] if s in SMILES_TO_MOL else (make_mol(s.split(">")[0], keep_h, add_h, keep_atom_map), make_mol(s.split(">")[-1], keep_h, add_h, keep_atom_map)))
+            mol.append(SMILES_TO_MOL[s] if s in SMILES_TO_MOL else (make_mol(s.split(">")[
+                       0], keep_h, add_h, keep_atom_map), make_mol(s.split(">")[-1], keep_h, add_h, keep_atom_map)))
         else:
-            mol.append(SMILES_TO_MOL[s] if s in SMILES_TO_MOL else make_mol(s, keep_h, add_h, keep_atom_map))
+            mol.append(SMILES_TO_MOL[s] if s in SMILES_TO_MOL else make_mol(
+                s, keep_h, add_h, keep_atom_map))
     return mol
-

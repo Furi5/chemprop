@@ -4,7 +4,7 @@ from chemprop.train import cross_validate, run_training
 from chemprop.args import TrainArgs, HyperoptArgs
 from chemprop.hyperparameter_optimization import hyperopt
 
-task = 'Environments'
+task = 'Environment_reg'
 gpu = 1
 
 
@@ -34,15 +34,14 @@ parser.add_argument('--gpu', help='gpu id')
 input_args = parser.parse_args()
 
 train_arguments = [
-    '--data_path', f'/home/fuli/my_code/git/tox_data/tox_data_v2/multiple_task/Enviroment_reg/train.csv',
-    '--separate_val_path', f'/home/fuli/my_code/git/tox_data/tox_data_v2/multiple_task/Enviroment_reg/valid.csv',
-    '--separate_test_path', f'/home/fuli/my_code/git/tox_data/tox_data_v2/multiple_task/Enviroment_reg/test.csv',
-    '--config_path', f'checkpoints/{task}/reg/{task}_hyperopt/config.json',
+    '--data_path', f'/home/fuli/my_code/git/tox_data/tox_data_v2/multiple_task/Environment_reg/{input_args.file}/train.csv',
+    '--separate_val_path', f'/home/fuli/my_code/git/tox_data/tox_data_v2/multiple_task/Environment_reg/{input_args.file}/val.csv',
+    '--separate_test_path', f'/home/fuli/my_code/git/tox_data/tox_data_v2/multiple_task/Environment_reg/{input_args.file}/test.csv',
+    '--config_path', f'/home/fuli/my_code/git/2/checkpoints/config/Environment_reg.json',
     '--dataset_type', 'regression',
-    '--save_dir', f'checkpoints/att/{task}/reg/{task}_{input_args.file}_model',
-    '--epochs', '30',
+    '--save_dir', f'checkpoints/att/{task}/{task}_{input_args.file}_model',
+    '--epochs', '300',
     '--gpu', str(input_args.gpu),
-    '--save_smiles_splits',
     '--save_preds',
 ]
 
