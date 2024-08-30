@@ -48,7 +48,7 @@ train_arguments = [
     '--dataset_type', 'regression',
     '--save_dir', f'checkpoints/DMPNN_Des/{task}/{task}_{input_args.file}_model',
     '--epochs', '300',
-    '--loss_function', 'evidential',
+    '--loss_function', 'MSE',
     '--num_workers', '8',
     '--gpu', str(input_args.gpu),
     '--save_preds',
