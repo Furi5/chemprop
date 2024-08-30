@@ -136,11 +136,8 @@ def random_multiple(task, test_path, pred_path, split_times, output_path):
     df = pd.DataFrame()
     for i in range(split_times):
         i += 1
-        if task in ['Cell', 'Drug']:
-            test_file = f'{test_path}/{i}/test.csv'
-        else:
-            test_file = f'{test_path}/{i}/{task}_test.csv'
-        pred_file = f'{pred_path}/test_preds.csv'
+        test_file = f'{test_path}/{i}/test.csv'
+        pred_file = f'{pred_path}/{task}_{i}_model/test_preds.csv'
         test_data = pd.read_csv(test_file)
         predict_data = pd.read_csv(pred_file)
         test_df = multi_task_evaluation(test_data, predict_data)
@@ -156,51 +153,34 @@ def random_multiple(task, test_path, pred_path, split_times, output_path):
 
 
 if __name__ == '__main__':
-    # random_multiple(
-    #     task='Target',
-    #     test_path='/home/fuli/my_code/git/tox_data/tox_data_v1/Target',
-    #     pred_path='/home/fuli/my_code/git/chemprop/checkpoints/att/Target',
-    #     split_times=1,
-    #     output_path='ModelPerformance/att/cla/Target')
-
-    # random_multiple(
-    #     task='Clinical',
-    #     test_path='/home/fuli/my_code/git/tox_data/tox_data_v1/Clinical',
-    #     pred_path='/home/fuli/my_code/git/chemprop/checkpoints/att/Clinical',
-    #     split_times=1,
-    #     output_path='ModelPerformance/att/cla/Clinical')
-
-    # random_multiple(
-    #     task='Environments',
-    #     test_path='/home/fuli/my_code/git/tox_data/tox_data_v1/Environments/cla',
-    #     pred_path='/home/fuli/my_code/git/chemprop/checkpoints/att/Environments/cla',
-    #     split_times=1,
-    #     output_path='ModelPerformance/att/cla/Environments')
-
+    task = 'Target'
     random_multiple(
-        task='Organ',
-        test_path='/home/fuli/my_code/git/tox_data/tox_data_v1/Organ',
-        pred_path='/home/fuli/my_code/git/2/checkpoints_att/Organ/test_2_Organ_1_model/',
-        split_times=1,
-        output_path='ModelPerformance/Organ')
+        task=task,
+        test_path=f'/home/fuli/my_code/git/tox_data/tox_data_v2/multiple_task/{task}',
+        pred_path=f'/home/fuli/my_code/git/2/checkpoints/att/{task}',
+        split_times=5,
+        output_path=f'/home/fuli/my_code/git/2/ModelPerformance/{task}')
 
-    # random_multiple(
-    #     task='Pathway',
-    #     test_path='/home/fuli/my_code/git/tox_data/tox_data_v1/Pathway',
-    #     pred_path='/home/fuli/my_code/git/chemprop/checkpoints/att/Pathway',
-    #     split_times=1,
-    #     output_path='ModelPerformance/att/cla/Pathway')
+    task = 'Cell'
+    random_multiple(
+        task=task,
+        test_path=f'/home/fuli/my_code/git/tox_data/tox_data_v2/multiple_task/{task}',
+        pred_path=f'/home/fuli/my_code/git/2/checkpoints/att/{task}',
+        split_times=2,
+        output_path=f'/home/fuli/my_code/git/2/ModelPerformance/{task}')
 
-    # random_multiple(
-    #     task='Cell',
-    #     test_path='/home/fuli/my_code/git/tox_data/tox_data_v2/multiple_task/Cell',
-    #     pred_path='/home/fuli/my_code/git/chemprop/checkpoints/att/Cell',
-    #     split_times=1,
-    #     output_path='ModelPerformance/att/cla/Cell')
+    task = 'Clinical'
+    random_multiple(
+        task=task,
+        test_path=f'/home/fuli/my_code/git/tox_data/tox_data_v2/multiple_task/{task}',
+        pred_path=f'/home/fuli/my_code/git/2/checkpoints/att/{task}',
+        split_times=5,
+        output_path=f'/home/fuli/my_code/git/2/ModelPerformance/{task}')
 
-    # random_multiple(
-    #     task='Drug',
-    #     test_path='/home/fuli/my_code/git/tox_data/tox_data_v2/multiple_task/Basic',
-    #     pred_path='/home/fuli/my_code/git/chemprop/checkpoints/att/Drug/cla',
-    #     split_times=1,
-    #     output_path='ModelPerformance/att/cla/Drug')
+    task = 'Drug'
+    random_multiple(
+        task=task,
+        test_path=f'/home/fuli/my_code/git/tox_data/tox_data_v2/multiple_task/Basic',
+        pred_path=f'/home/fuli/my_code/git/2/checkpoints/att/{task}',
+        split_times=5,
+        output_path=f'/home/fuli/my_code/git/2/ModelPerformance/{task}')
